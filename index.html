@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Playlist Formatter</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="app-header">
+            <h1><i class="fab fa-youtube"></i> YouTube Playlist Formatter</h1>
+            <p>Extract and format your YouTube playlist information with ease</p>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <label for="playlist-url">YouTube Playlist URL</label>
+                <input type="text" id="playlist-url" placeholder="https://youtube.com/playlist?list=..." value="">
+            </div>
+            
+            <div class="input-group">
+                <label for="api-key">YouTube API Key</label>
+                <div class="api-key-container">
+                    <input type="password" id="api-key" placeholder="Enter your YouTube API Key">
+                    <button id="toggle-api-key" class="toggle-btn"><i class="fas fa-eye"></i></button>
+                </div>
+                <div class="api-key-help">
+                    <a href="https://developers.google.com/youtube/v3/getting-started" target="_blank">
+                        How to get an API key <i class="fas fa-external-link-alt"></i>
+                    </a>
+                </div>
+            </div>
+
+            <button id="format-btn" class="primary-btn">Format Playlist</button>
+        </div>
+
+        <div class="loading-section" style="display: none;">
+            <div class="spinner"></div>
+            <p>Fetching playlist data...</p>
+        </div>
+
+        <div class="result-section" style="display: none;">
+            <div class="result-header">
+                <h2>Formatted Playlist</h2>
+                <button id="copy-btn" class="secondary-btn"><i class="fas fa-copy"></i> Copy</button>
+            </div>
+            <div class="result-content">
+                <pre id="result-text"></pre>
+            </div>
+        </div>
+
+        <div class="error-section" style="display: none;">
+            <div class="error-icon"><i class="fas fa-exclamation-circle"></i></div>
+            <h3>Error</h3>
+            <p id="error-message"></p>
+        </div>
+    </div>
+
+    <footer>
+        <p>Made with <i class="fas fa-heart"></i> | View on <a href="https://github.com/yourusername/YT-playlist" target="_blank"><i class="fab fa-github"></i> GitHub</a></p>
+    </footer>
+
+    <script src="app.js"></script>
+    <script src="ui.js"></script>
+</body>
+</html>
