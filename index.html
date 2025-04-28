@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,8 +8,17 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
-<body>
+
+<body data-theme="light">
     <div class="container">
+        <div class="theme-switch-wrapper">
+            <span class="theme-icon"><i class="fas fa-moon"></i></span>
+            <label class="theme-switch">
+                <input type="checkbox" id="theme-toggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+
         <div class="app-header">
             <h1><i class="fab fa-youtube"></i> YouTube Playlist Formatter</h1>
             <p>Extract and format your YouTube playlist information with ease</p>
@@ -19,7 +29,7 @@
                 <label for="playlist-url">YouTube Playlist URL</label>
                 <input type="text" id="playlist-url" placeholder="https://youtube.com/playlist?list=..." value="">
             </div>
-            
+
             <div class="input-group">
                 <label for="api-key">YouTube API Key</label>
                 <div class="api-key-container">
@@ -33,6 +43,36 @@
                 </div>
             </div>
 
+            <div class="format-options">
+                <h3>Formatting Options</h3>
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" id="include-duration" checked>
+                        Include video duration
+                    </label>
+                    <label>
+                        <input type="checkbox" id="include-links" checked>
+                        Include video links
+                    </label>
+                    <label>
+                        <input type="checkbox" id="include-numbers" checked>
+                        Include video numbers
+                    </label>
+                </div>
+
+                <h3>Link Format</h3>
+                <div class="option-group">
+                    <label>
+                        <input type="radio" name="link-format" id="link-format-short" checked>
+                        Short links (youtu.be)
+                    </label>
+                    <label>
+                        <input type="radio" name="link-format" id="link-format-full">
+                        Full links (youtube.com)
+                    </label>
+                </div>
+            </div>
+
             <button id="format-btn" class="primary-btn">Format Playlist</button>
         </div>
 
@@ -42,9 +82,29 @@
         </div>
 
         <div class="result-section" style="display: none;">
+            <div class="playlist-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="total-videos">0</div>
+                    <div class="stat-label">Videos</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="total-duration">0:00</div>
+                    <div class="stat-label">Total Duration</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="avg-duration">0:00</div>
+                    <div class="stat-label">Avg. Duration</div>
+                </div>
+            </div>
+
             <div class="result-header">
                 <h2>Formatted Playlist</h2>
-                <button id="copy-btn" class="secondary-btn"><i class="fas fa-copy"></i> Copy</button>
+                <div class="export-buttons">
+                    <button id="copy-btn" class="secondary-btn"><i class="fas fa-copy"></i> Copy</button>
+                    <button id="download-txt-btn" class="export-btn"><i class="fas fa-file-download"></i> Download
+                        TXT</button>
+                    <button id="download-md-btn" class="export-btn"><i class="fas fa-markdown"></i> Download MD</button>
+                </div>
             </div>
             <div class="result-content">
                 <pre id="result-text"></pre>
@@ -59,10 +119,12 @@
     </div>
 
     <footer>
-        <p>Made with <i class="fas fa-heart"></i> | View on <a href="https://github.com/yourusername/YT-playlist" target="_blank"><i class="fab fa-github"></i> GitHub</a></p>
+        <p>Made with <i class="fas fa-heart"></i> | Created by <a href="https://github.com/Osama-Yusuf"
+                target="_blank">Osama Yusuf</a></p>
     </footer>
 
     <script src="app.js"></script>
     <script src="ui.js"></script>
 </body>
+
 </html>

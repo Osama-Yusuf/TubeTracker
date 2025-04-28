@@ -45,10 +45,62 @@ async function fetchPlaylistData(playlistId, apiKey) {
             console.error("API Error:", data.error.message);
             return [];
         }
+        
+        // Get playlist title if available
+        if (data.items && data.items.length > 0) {
+            // We need to make a separate API call to get the playlist title
+            await fetchPlaylistTitle(playlistId, apiKey, data.items);
+        }
+        
         return data.items || [];
     } catch (error) {
         console.error("Error fetching playlist data:", error);
         return [];
+    }
+}
+
+// Function to fetch playlist title
+async function fetchPlaylistTitle(playlistId, apiKey, items) {
+    const apiUrl = `https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=${playlistId}&key=${apiKey}`;
+    
+    try {
+        // For Node.js environment
+        let response;
+        if (typeof fetch === 'undefined') {
+            const https = require('https');
+            response = await new Promise((resolve, reject) => {
+                https.get(apiUrl, (res) => {
+                    let data = '';
+                    res.on('data', (chunk) => {
+                        data += chunk;
+                    });
+                    res.on('end', () => {
+                        resolve({ json: () => JSON.parse(data) });
+                    });
+                }).on('error', (err) => {
+                    reject(err);
+                });
+            });
+        } else {
+            // For browser environment
+            response = await fetch(apiUrl);
+        }
+
+        const data = await response.json();
+        if (data.error) {
+            console.error("API Error:", data.error.message);
+            return;
+        }
+        
+        if (data.items && data.items.length > 0) {
+            const playlistTitle = data.items[0].snippet.title;
+            // Add the playlist title to each item
+            items.forEach(item => {
+                item.snippet.playlistTitle = playlistTitle;
+            });
+        }
+    } catch (error) {
+        console.error("Error fetching playlist title:", error);
     }
 }
 
@@ -182,6 +234,124 @@ async function formatPlaylist(playlistUrl, apiKey) {
     }
 
     return totalDurationText + formattedOutput;
+}
+
+// Enhanced function to format playlist with options
+async function formatPlaylistWithOptions(playlistUrl, apiKey, options = {}) {
+    const defaultOptions = {
+        includeDuration: true,
+        includeLinks: true,
+        includeNumbers: true,
+        useLongLinks: false
+    };
+    
+    // Merge default options with provided options
+    const mergedOptions = { ...defaultOptions, ...options };
+    
+    const playlistId = extractPlaylistId(playlistUrl);
+
+    if (!playlistId) {
+        console.error("Invalid playlist URL");
+        return { error: "Error: Invalid playlist URL" };
+    }
+
+    if (!apiKey) {
+        console.error("API key is required");
+        return { error: "Error: YouTube API key is required" };
+    }
+
+    const videos = await fetchPlaylistData(playlistId, apiKey);
+
+    if (!videos || videos.length === 0) {
+        console.error("No videos found or API error occurred");
+        return { error: "Error: No videos found or API error occurred" };
+    }
+
+    let formattedOutput = "";
+    let totalDurationMinutes = 0;
+    const processedVideos = [];
+    let playlistTitle = "YouTube Playlist";
+    
+    // Get playlist title if available
+    if (videos.length > 0 && videos[0].snippet && videos[0].snippet.playlistTitle) {
+        playlistTitle = videos[0].snippet.playlistTitle;
+    }
+
+    // Process each video
+    for (let i = 0; i < videos.length; i++) {
+        const video = videos[i];
+        const title = video.snippet.title;
+        const videoId = video.contentDetails.videoId;
+        
+        // Format URL based on option
+        const videoUrl = mergedOptions.useLongLinks 
+            ? `https://www.youtube.com/watch?v=${videoId}` 
+            : `https://youtu.be/${videoId}`;
+
+        // Get video duration
+        const durationData = await getVideoDuration(videoId, apiKey);
+        const durationString = durationData.durationString;
+        totalDurationMinutes += durationData.minutes;
+        
+        // Store processed video data
+        processedVideos.push({
+            title,
+            url: videoUrl,
+            duration: durationString,
+            durationMinutes: durationData.minutes
+        });
+
+        // Format line based on options
+        let line = "";
+        
+        if (mergedOptions.includeNumbers) {
+            line += `- ${i + 1}. `;
+        } else {
+            line += "- ";
+        }
+        
+        line += title;
+        
+        if (mergedOptions.includeDuration) {
+            line += ` (${durationString})`;
+        }
+        
+        if (mergedOptions.includeLinks) {
+            line += ` ${videoUrl}`;
+        }
+        
+        formattedOutput += line + "\n";
+    }
+
+    // Calculate total duration
+    const hours = Math.floor(totalDurationMinutes / 60);
+    const minutes = Math.floor(totalDurationMinutes % 60);
+    const seconds = Math.round((totalDurationMinutes * 60) % 60);
+    let totalDurationText = "";
+
+    if (hours > 0) {
+        totalDurationText = `Total playlist duration: ${hours} hour${hours !== 1 ? 's' : ''}, ${minutes} minute${minutes !== 1 ? 's' : ''}, and ${seconds} second${seconds !== 1 ? 's' : ''} (${videos.length} videos)\n\n`;
+    } else if (minutes > 0) {
+        totalDurationText = `Total playlist duration: ${minutes} minute${minutes !== 1 ? 's' : ''} and ${seconds} second${seconds !== 1 ? 's' : ''} (${videos.length} videos)\n\n`;
+    } else {
+        totalDurationText = `Total playlist duration: ${seconds} second${seconds !== 1 ? 's' : ''} (${videos.length} videos)\n\n`;
+    }
+    
+    // Prepare stats for UI
+    const stats = {
+        hours,
+        minutes,
+        seconds,
+        videoCount: videos.length,
+        totalSeconds: Math.round(totalDurationMinutes * 60)
+    };
+
+    return {
+        formattedOutput: totalDurationText + formattedOutput,
+        stats,
+        videos: processedVideos,
+        playlistTitle
+    };
 }
 
 // If in Node.js environment, run the example
