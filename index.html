@@ -6,7 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TubeTracker | YouTube Playlist Organizer</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="style-fixes.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -67,34 +69,9 @@
                 <button id="change-api-key" class="text-btn">Change API Key</button>
             </div>
 
-            <div class="format-options">
-                <h3>Formatting Options</h3>
-                <div class="option-group">
-                    <label>
-                        <input type="checkbox" id="include-duration" checked>
-                        Include video duration
-                    </label>
-                    <label>
-                        <input type="checkbox" id="include-links" checked>
-                        Include video links
-                    </label>
-                    <label>
-                        <input type="checkbox" id="include-numbers" checked>
-                        Include video numbers
-                    </label>
-                </div>
-
-                <h3>Link Format</h3>
-                <div class="option-group">
-                    <label>
-                        <input type="radio" name="link-format" id="link-format-short" checked>
-                        Short links (youtu.be)
-                    </label>
-                    <label>
-                        <input type="radio" name="link-format" id="link-format-full">
-                        Full links (youtube.com)
-                    </label>
-                </div>
+            <!-- Formatting options moved to settings modal -->
+            <div class="input-group">
+                <p class="help-text">Formatting options are available in the settings <i class="fas fa-cog"></i></p>
             </div>
 
             <button id="format-btn" class="primary-btn">Format Playlist</button>
@@ -115,33 +92,62 @@
             <p>Fetching playlist data...</p>
         </div>
 
-        <div class="result-section" style="display: none;">
+        <!-- Result section removed from here and moved to playlist summary -->
+
+
+        <div class="playlist-summary" id="playlist-summary" style="display: none;">
+            <div class="summary-header">
+                <h3>Playlist Summary</h3>
+            </div>
+            
             <div class="playlist-stats">
                 <div class="stat-item">
+                    <div class="stat-icon"><i class="fas fa-film"></i></div>
                     <div class="stat-value" id="total-videos">0</div>
                     <div class="stat-label">Videos</div>
                 </div>
                 <div class="stat-item">
+                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
                     <div class="stat-value" id="total-duration">0:00</div>
                     <div class="stat-label">Total Duration</div>
                 </div>
                 <div class="stat-item">
+                    <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
                     <div class="stat-value" id="avg-duration">0:00</div>
                     <div class="stat-label">Avg. Duration</div>
                 </div>
-            </div>
-
-            <div class="result-header">
-                <h2>Formatted Playlist</h2>
-                <div class="export-buttons">
-                    <button id="copy-btn" class="secondary-btn"><i class="fas fa-copy"></i> Copy</button>
-                    <button id="download-txt-btn" class="export-btn"><i class="fas fa-file-download"></i> Download
-                        TXT</button>
-                    <button id="download-md-btn" class="export-btn"><i class="fas fa-markdown"></i> Download MD</button>
+                <div class="stat-item">
+                    <div class="stat-icon"><i class="fas fa-tachometer-alt"></i></div>
+                    <div class="stat-value" id="watch-speed">1x</div>
+                    <div class="stat-label">Watch Speed</div>
                 </div>
             </div>
-            <div class="result-content">
-                <pre id="result-text"></pre>
+            
+            <!-- Formatted output moved here -->
+            <div class="result-header">
+                <h2 id="playlist-title">Formatted Playlist</h2>
+                <div class="export-buttons">
+                    <div class="dropdown">
+                        <button class="export-btn dropdown-btn" id="export-dropdown">
+                            <i class="fas fa-file-export"></i> Export <i class="fas fa-caret-down"></i>
+                        </button>
+                        <div class="dropdown-content" id="export-dropdown-content">
+                            <button id="export-txt"><i class="fas fa-file-alt"></i> Text File (.txt)</button>
+                            <button id="export-md"><i class="fab fa-markdown"></i> Markdown (.md)</button>
+                            <button id="export-csv"><i class="fas fa-file-csv"></i> CSV File (.csv)</button>
+                            <button id="export-json"><i class="fas fa-file-code"></i> JSON File (.json)</button>
+                            <button id="export-html"><i class="fas fa-file-code"></i> HTML File (.html)</button>
+                        </div>
+                    </div>
+                    <button class="export-btn" id="copy-btn"><i class="fas fa-copy"></i> Copy</button>
+                    <button class="export-btn" id="share-btn"><i class="fas fa-share-alt"></i> Share</button>
+                </div>
+            </div>
+            <textarea id="formatted-output" readonly></textarea>
+            </div>
+            
+            <div id="visualization-container" class="visualization-container" style="display: none;">
+                <canvas id="duration-chart"></canvas>
             </div>
         </div>
 
@@ -156,63 +162,115 @@
         <p>Made with <i class="fas fa-heart"></i> by <a href="https://github.com/Osama-Yusuf" target="_blank">Osama Yusuf</a></p>
     </footer>
     
+    <!-- Share Modal -->
+    <div id="share-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Share Playlist</h2>
+                <span class="close-modal" id="close-share-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="share-options">
+                    <h3>Playlist Link</h3>
+                    <div class="share-link-container">
+                        <input type="text" id="share-link" readonly>
+                        <button id="copy-link-btn" class="btn"><i class="fas fa-copy"></i> Copy</button>
+                    </div>
+                    
+                    <h3>Share on Social Media</h3>
+                    <div class="social-buttons">
+                        <button id="twitter-share" class="social-btn twitter"><i class="fab fa-twitter"></i> Twitter</button>
+                        <button id="facebook-share" class="social-btn facebook"><i class="fab fa-facebook-f"></i> Facebook</button>
+                        <button id="whatsapp-share" class="social-btn whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+                        <button id="telegram-share" class="social-btn telegram"><i class="fab fa-telegram-plane"></i> Telegram</button>
+                    </div>
+                    
+                    <h3>Embed Code</h3>
+                    <div class="embed-container">
+                        <textarea id="embed-code" readonly></textarea>
+                        <button id="copy-embed-btn" class="btn"><i class="fas fa-copy"></i> Copy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Settings Modal -->
     <div id="settings-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Settings</h2>
-                <span class="close-modal">&times;</span>
+                <span class="close-modal" id="close-settings-modal">&times;</span>
             </div>
             <div class="modal-body">
                 <div class="settings-group">
-                    <h3>YouTube API Key</h3>
-                    <div class="input-group">
-                        <label for="settings-api-key">Your API Key</label>
-                        <div class="api-key-container">
-                            <input type="password" id="settings-api-key" placeholder="Enter your YouTube API Key">
-                            <button id="settings-toggle-api-key" class="toggle-btn"><i class="fas fa-eye"></i></button>
-                        </div>
-                        <button id="save-api-key" class="secondary-btn">Save API Key</button>
+                    <h3>API Key</h3>
+                    <div class="api-key-input-group">
+                        <input type="password" id="api-key" placeholder="Enter your YouTube API Key">
+                        <button id="toggle-api-key-visibility"><i class="fas fa-eye"></i></button>
+                    </div>
+                    <button id="save-api-key" class="btn">Save API Key</button>
+                    <div id="api-key-status"></div>
+                </div>
+                
+                <div class="settings-group">
+                    <h3>Display Options</h3>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="dark-mode-toggle">
+                        <label for="dark-mode-toggle">Dark Mode</label>
+                        <span class="toggle-slider"></span>
                     </div>
                 </div>
                 
                 <div class="settings-group">
-                    <h3>Default Formatting</h3>
+                    <h3>Watch Speed</h3>
+                    <select id="watch-speed-input" class="settings-select">
+                        <option value="1">1x (Normal)</option>
+                        <option value="1.25">1.25x</option>
+                        <option value="1.5">1.5x</option>
+                        <option value="1.75">1.75x</option>
+                        <option value="2">2x</option>
+                    </select>
+                    <p class="settings-help">This affects how the total watch time is calculated in the playlist summary.</p>
+                </div>
+                
+                <div class="settings-group">
+                    <h3>Formatting Options</h3>
                     <div class="option-group">
                         <label>
-                            <input type="checkbox" id="settings-include-duration" checked>
-                            Include video duration by default
+                            <input type="checkbox" id="include-duration" checked>
+                            Include video duration
                         </label>
                         <label>
-                            <input type="checkbox" id="settings-include-links" checked>
-                            Include video links by default
+                            <input type="checkbox" id="include-links" checked>
+                            Include video links
                         </label>
                         <label>
-                            <input type="checkbox" id="settings-include-numbers" checked>
-                            Include video numbers by default
+                            <input type="checkbox" id="include-numbers" checked>
+                            Include video numbers
                         </label>
                     </div>
-                    
-                    <h3>Default Link Format</h3>
+                </div>
+                
+                <div class="settings-group">
+                    <h3>Link Format</h3>
                     <div class="option-group">
                         <label>
-                            <input type="radio" name="settings-link-format" id="settings-link-format-short" checked>
+                            <input type="radio" name="link-format" id="link-format-short" checked>
                             Short links (youtu.be)
                         </label>
                         <label>
-                            <input type="radio" name="settings-link-format" id="settings-link-format-full">
+                            <input type="radio" name="link-format" id="link-format-full">
                             Full links (youtube.com)
                         </label>
                     </div>
                 </div>
-                
-                <button id="save-settings" class="primary-btn">Save Settings</button>
             </div>
         </div>
     </div>
 
-    <script src="app.js"></script>
-    <script src="ui.js"></script>
+    <script src="chart.js"></script>
+    <script src="fixed-ui.js"></script>
+    <script src="formatter.js"></script>
 </body>
-
 </html>

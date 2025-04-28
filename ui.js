@@ -1,5 +1,23 @@
-// UI handling for PlaylistPulse
+// TubeTracker - UI.js
+// Handles all UI interactions and localStorage functionality
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize core UI functionality
+    initThemeToggle();
+    initApiKey();
+    initModalButtons();
+    initHistoryFeature();
+    initExportOptions();
+    
+    // Initialize chart visualizer if available
+    if (typeof PlaylistVisualizer !== 'undefined') {
+        try {
+            const visualizer = new PlaylistVisualizer();
+            window.visualizer = visualizer; // Make it globally accessible
+        } catch (error) {
+            console.error('Error initializing visualizer:', error);
+        }
+    }
+    
     // Elements - Main UI
     const playlistUrlInput = document.getElementById('playlist-url');
     const apiKeyInput = document.getElementById('api-key');
@@ -17,9 +35,242 @@ document.addEventListener('DOMContentLoaded', function() {
     const errorSection = document.querySelector('.error-section');
     const errorMessage = document.getElementById('error-message');
     
-    // Elements - Theme
+// Theme toggle functionality
+function initThemeToggle() {
     const themeToggle = document.getElementById('theme-toggle');
     const themeIcon = document.querySelector('.theme-icon i');
+    
+    if (!themeToggle || !themeIcon) return;
+    
+    // Load saved theme preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        document.body.setAttribute('data-theme', 'dark');
+        themeToggle.checked = true;
+        themeIcon.className = 'fas fa-sun';
+    } else {
+        document.body.setAttribute('data-theme', 'light');
+        themeToggle.checked = false;
+        themeIcon.className = 'fas fa-moon';
+    }
+    
+    // Add event listener for theme toggle
+    themeToggle.addEventListener('change', function() {
+        if (this.checked) {
+            document.body.setAttribute('data-theme', 'dark');
+            themeIcon.className = 'fas fa-sun';
+            localStorage.setItem('theme', 'dark');
+        } else {
+            document.body.setAttribute('data-theme', 'light');
+            themeIcon.className = 'fas fa-moon';
+            localStorage.setItem('theme', 'light');
+        }
+    });
+}
+
+// API Key management
+function initApiKey() {
+    const apiKeyInput = document.getElementById('api-key');
+    const saveApiKeyBtn = document.getElementById('save-api-key');
+    const apiKeyStatus = document.getElementById('api-key-status');
+    const toggleApiKeyBtn = document.getElementById('toggle-api-key-visibility');
+    
+    if (!apiKeyInput) return;
+    
+    // Load API key from localStorage
+    const savedApiKey = localStorage.getItem('youtubeApiKey');
+    if (savedApiKey) {
+        apiKeyInput.value = savedApiKey;
+        if (apiKeyStatus) {
+            apiKeyStatus.textContent = 'API Key loaded from storage';
+            apiKeyStatus.className = 'status-success';
+        }
+        
+        // Update any API key message in the main UI
+        const apiKeyMessage = document.getElementById('api-key-message');
+        const apiKeySection = document.getElementById('api-key-section');
+        const changeApiKeyBtn = document.getElementById('change-api-key');
+        
+        if (apiKeyMessage) {
+            apiKeyMessage.textContent = 'API key saved';
+            apiKeyMessage.style.color = 'var(--success-color)';
+        }
+        
+        if (apiKeySection) {
+            apiKeySection.style.display = 'none';
+        }
+        
+        if (changeApiKeyBtn) {
+            changeApiKeyBtn.style.display = 'inline-block';
+        }
+    }
+    
+    // Save API key to localStorage
+    if (saveApiKeyBtn) {
+        saveApiKeyBtn.addEventListener('click', function() {
+            const apiKey = apiKeyInput.value.trim();
+            if (apiKey) {
+                localStorage.setItem('youtubeApiKey', apiKey);
+                
+                if (apiKeyStatus) {
+                    apiKeyStatus.textContent = 'API Key saved successfully';
+                    apiKeyStatus.className = 'status-success';
+                    setTimeout(() => {
+                        apiKeyStatus.textContent = '';
+                    }, 3000);
+                }
+                
+                // Update any API key message in the main UI
+                const apiKeyMessage = document.getElementById('api-key-message');
+                const apiKeySection = document.getElementById('api-key-section');
+                const changeApiKeyBtn = document.getElementById('change-api-key');
+                
+                if (apiKeyMessage) {
+                    apiKeyMessage.textContent = 'API key saved';
+                    apiKeyMessage.style.color = 'var(--success-color)';
+                }
+                
+                if (apiKeySection) {
+                    apiKeySection.style.display = 'none';
+                }
+                
+                if (changeApiKeyBtn) {
+                    changeApiKeyBtn.style.display = 'inline-block';
+                }
+            } else {
+                if (apiKeyStatus) {
+                    apiKeyStatus.textContent = 'Please enter a valid API Key';
+                    apiKeyStatus.className = 'status-error';
+                }
+            }
+        });
+    }
+    
+    // Toggle API key visibility
+    if (toggleApiKeyBtn) {
+        toggleApiKeyBtn.addEventListener('click', function() {
+            if (apiKeyInput.type === 'password') {
+                apiKeyInput.type = 'text';
+                toggleApiKeyBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            } else {
+                apiKeyInput.type = 'password';
+                toggleApiKeyBtn.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+        });
+    }
+    
+    // Handle change API key button
+    const changeApiKeyBtn = document.getElementById('change-api-key');
+    if (changeApiKeyBtn) {
+        changeApiKeyBtn.addEventListener('click', function() {
+            const apiKeySection = document.getElementById('api-key-section');
+            if (apiKeySection) {
+                apiKeySection.style.display = 'block';
+                this.style.display = 'none';
+            }
+        });
+    }
+}
+
+// Initialize modal buttons
+function initModalButtons() {
+    // Settings Modal
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsModal = document.getElementById('settings-modal');
+    const closeSettingsModal = document.getElementById('close-settings-modal');
+    
+    if (settingsBtn && settingsModal) {
+        settingsBtn.addEventListener('click', function() {
+            settingsModal.style.display = 'block';
+        });
+        
+        if (closeSettingsModal) {
+            closeSettingsModal.addEventListener('click', function() {
+                settingsModal.style.display = 'none';
+            });
+        }
+    }
+    
+    // History Modal
+    const historyBtn = document.getElementById('history-btn');
+    const historyModal = document.getElementById('history-modal');
+    const closeHistoryModal = document.getElementById('close-history-modal');
+    
+    if (historyBtn) {
+        historyBtn.addEventListener('click', function() {
+            // If we have a modal, use it
+            if (historyModal) {
+                updateHistoryList();
+                historyModal.style.display = 'block';
+            } else {
+                // Otherwise toggle the history section
+                const historySection = document.querySelector('.history-section');
+                if (historySection) {
+                    if (historySection.style.display === 'none' || historySection.style.display === '') {
+                        historySection.style.display = 'block';
+                        updateHistoryList();
+                        historySection.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        historySection.style.display = 'none';
+                    }
+                }
+            }
+        });
+        
+        if (closeHistoryModal) {
+            closeHistoryModal.addEventListener('click', function() {
+                historyModal.style.display = 'none';
+            });
+        }
+    }
+    
+    // Share Modal
+    const shareBtn = document.getElementById('share-btn');
+    const shareModal = document.getElementById('share-modal');
+    const closeShareModal = document.getElementById('close-share-modal');
+    
+    if (shareBtn && shareModal) {
+        shareBtn.addEventListener('click', function() {
+            const playlistUrl = document.getElementById('playlist-url')?.value;
+            if (playlistUrl) {
+                // Set share link
+                const shareLinkInput = document.getElementById('share-link');
+                if (shareLinkInput) shareLinkInput.value = playlistUrl;
+                
+                // Generate embed code
+                const embedCodeTextarea = document.getElementById('embed-code');
+                const playlistId = extractPlaylistId(playlistUrl);
+                if (embedCodeTextarea && playlistId) {
+                    const embedCode = `<iframe width="560" height="315" src="https://www.youtube.com/embed/videoseries?list=${playlistId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+                    embedCodeTextarea.value = embedCode;
+                }
+                
+                shareModal.style.display = 'block';
+            } else {
+                alert('Please enter a playlist URL first.');
+            }
+        });
+        
+        if (closeShareModal) {
+            closeShareModal.addEventListener('click', function() {
+                shareModal.style.display = 'none';
+            });
+        }
+    }
+    
+    // Close modals when clicking outside
+    window.addEventListener('click', function(event) {
+        if (settingsModal && event.target === settingsModal) {
+            settingsModal.style.display = 'none';
+        }
+        if (historyModal && event.target === historyModal) {
+            historyModal.style.display = 'none';
+        }
+        if (shareModal && event.target === shareModal) {
+            shareModal.style.display = 'none';
+        }
+    });
+}
     
     // Elements - Format options
     const includeDuration = document.getElementById('include-duration');
@@ -517,89 +768,13 @@ document.addEventListener('DOMContentLoaded', function() {
             settingsApiKeyInput.value = savedApiKey;
         }
         
-        // Load current format options
-        settingsIncludeDuration.checked = includeDuration.checked;
-        settingsIncludeLinks.checked = includeLinks.checked;
-        settingsIncludeNumbers.checked = includeNumbers.checked;
-        settingsLinkFormatShort.checked = linkFormatShort.checked;
-        settingsLinkFormatFull.checked = linkFormatFull.checked;
-    });
-    
-    closeModal.addEventListener('click', function() {
-        settingsModal.style.display = 'none';
-    });
-    
-    // Close modal when clicking outside of it
-    window.addEventListener('click', function(event) {
-        if (event.target === settingsModal) {
-            settingsModal.style.display = 'none';
-        }
-    });
-    
-    // Save API key from settings
-    saveApiKeyBtn.addEventListener('click', function() {
-        const apiKey = settingsApiKeyInput.value.trim();
-        if (apiKey) {
-            localStorage.setItem('youtubeApiKey', apiKey);
-            apiKeyInput.value = apiKey;
-            apiKeyMessage.textContent = 'API key saved';
-            apiKeyMessage.style.color = 'var(--success-color)';
-            apiKeySection.style.display = 'none';
-            changeApiKeyBtn.style.display = 'inline-block';
-            
-            // Show success message
-            const successMessage = document.createElement('div');
-            successMessage.className = 'success-message';
-            successMessage.textContent = 'API key saved successfully!';
-            successMessage.style.color = 'var(--success-color)';
-            successMessage.style.marginTop = '10px';
-            this.parentNode.appendChild(successMessage);
-            
-            // Remove message after 3 seconds
-            setTimeout(() => {
-                successMessage.remove();
-            }, 3000);
-        }
-    });
-    
-    // Save settings
-    saveSettingsBtn.addEventListener('click', function() {
-        // Update main UI options from settings
-        includeDuration.checked = settingsIncludeDuration.checked;
-        includeLinks.checked = settingsIncludeLinks.checked;
-        includeNumbers.checked = settingsIncludeNumbers.checked;
-        linkFormatShort.checked = settingsLinkFormatShort.checked;
-        linkFormatFull.checked = settingsLinkFormatFull.checked;
-        
-        // Save to localStorage
-        saveFormatOptions();
-        
-        // Close modal
-        settingsModal.style.display = 'none';
-    });
-    
-    // History button functionality
-    historyBtn.addEventListener('click', function() {
-        if (historySection.style.display === 'none' || historySection.style.display === '') {
-            historySection.style.display = 'block';
-            // Scroll to history section
-            historySection.scrollIntoView({ behavior: 'smooth' });
-        } else {
-            historySection.style.display = 'none';
-        }
-    });
     
     // Clear history button
-    clearHistoryBtn.addEventListener('click', function() {
-        if (confirm('Are you sure you want to clear your playlist history?')) {
-            playlistHistory = [];
-            localStorage.setItem('playlistHistory', JSON.stringify(playlistHistory));
-            renderHistoryList();
-        }
-    });
-    
-    // Helper function to format playlist with options
-    async function formatPlaylistWithOptions(playlistUrl, apiKey, options) {
+    if (clearHistoryBtn) {
+        clearHistoryBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear your playlist history?')) {
+                localStorage.removeItem('playlistHistory');
+                updateHistoryList();
         try {
             // First get the raw data
             const playlistId = extractPlaylistId(playlistUrl);

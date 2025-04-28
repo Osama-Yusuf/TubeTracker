@@ -1,0 +1,420 @@
+/* Style fixes for TubeTracker */
+
+/* Dropdown styles - modified to work on click instead of hover */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 5px;
+    background-color: var(--card-bg);
+    min-width: 180px;
+    box-shadow: 0 8px 16px 0 var(--shadow-color);
+    z-index: 10;
+    border-radius: var(--btn-radius);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.dropdown-content button {
+    width: 100%;
+    text-align: left;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background-color 0.2s;
+}
+
+.dropdown-content button:hover {
+    background-color: var(--result-bg);
+}
+
+.dropdown-content button i {
+    width: 16px;
+    text-align: center;
+    color: var(--secondary-color);
+}
+
+/* This class will be toggled with JavaScript */
+.show-dropdown {
+    display: block;
+    animation: fadeIn 0.2s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Enhanced playlist summary styles */
+.playlist-summary {
+    background-color: var(--card-bg);
+    border-radius: var(--card-radius);
+    box-shadow: 0 4px 15px var(--shadow-color);
+    margin: 20px 0;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    transition: opacity 0.3s ease-in-out;
+    padding: 0;
+}
+
+.summary-header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.summary-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.playlist-stats {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    padding: 25px;
+    margin: 15px;
+    background-color: var(--card-bg);
+    border-radius: var(--card-radius);
+    border: 1px solid var(--border-color);
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 15px;
+    min-width: 100px;
+    text-align: center;
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--heading-color);
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Result header styling */
+.result-header {
+    padding: 20px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--result-bg);
+    border-bottom: 1px solid var(--border-color);
+    margin: 0 15px;
+    border-radius: var(--card-radius);
+}
+
+.result-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--heading-color);
+}
+
+.export-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.export-btn {
+    padding: 8px 12px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--btn-radius);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.export-btn:hover {
+    background-color: var(--secondary-color);
+    transform: translateY(-2px);
+}
+
+/* Output container */
+.output-container {
+    position: relative;
+    background-color: var(--result-bg);
+    border-radius: var(--card-radius);
+    margin: 15px;
+    margin-top: 15px;
+    padding: 0;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+/* Fix for formatted output textarea */
+#formatted-output {
+    width: 100%;
+    min-height: 300px;
+    padding: 25px;
+    font-family: monospace;
+    border: none;
+    border-radius: var(--card-radius);
+    background-color: var(--result-bg);
+    color: var(--text-color);
+    resize: vertical;
+    white-space: pre-wrap;
+    overflow-y: auto;
+    line-height: 1.5;
+    font-size: 14px;
+    box-shadow: none;
+    transition: background-color 0.3s ease;
+}
+
+#formatted-output:focus {
+    outline: none;
+    background-color: var(--input-bg);
+}
+
+#formatted-output::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+/* Fix for buttons in settings modal */
+.api-key-input-group {
+    display: flex;
+    position: relative;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.api-key-input-group input {
+    flex: 1;
+    padding: 10px 40px 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--btn-radius);
+    background-color: var(--input-bg);
+    color: var(--text-color);
+}
+
+#toggle-api-key-visibility {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 5px;
+    font-size: 16px;
+}
+
+#toggle-api-key-visibility:hover {
+    color: var(--primary-color);
+}
+
+.btn {
+    padding: 10px 16px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--btn-radius);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.btn:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+#api-key-status {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    min-height: 20px;
+}
+
+.status-success {
+    color: var(--success-color);
+}
+
+.status-error {
+    color: var(--error-color);
+}
+
+/* Alert styles */
+#alert-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 350px;
+}
+
+.alert {
+    padding: 15px;
+    border-radius: var(--card-radius);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: slideIn 0.3s ease-out;
+    overflow: hidden;
+}
+
+.alert-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.alert-info {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.alert-error {
+    background-color: var(--danger-color, #dc3545);
+    color: white;
+}
+
+.alert-success {
+    background-color: var(--success-color, #28a745);
+    color: white;
+}
+
+.alert-close {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0;
+    font-size: 16px;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.alert-close:hover {
+    opacity: 1;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* History item styling */
+.history-item {
+    background-color: var(--card-bg);
+    border-radius: var(--card-radius);
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px var(--shadow-color);
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.history-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px var(--shadow-color);
+}
+
+.history-title {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: var(--heading-color);
+    margin: 0;
+}
+
+.history-url {
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+    word-break: break-all;
+    margin: 0;
+}
+
+.history-date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.history-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.history-load-btn {
+    padding: 6px 12px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--btn-radius);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.history-load-btn:hover {
+    background-color: var(--secondary-color);
+}
+
+.history-remove-btn {
+    padding: 6px 10px;
+    background-color: var(--danger-color, #dc3545);
+    color: white;
+    border: none;
+    border-radius: var(--btn-radius);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.history-remove-btn:hover {
+    background-color: var(--danger-hover, #bd2130);
+}
