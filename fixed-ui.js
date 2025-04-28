@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initShareFeature();
     initFormatButton();
     initCopyButton();
+    initWatchSpeedControl();
 });
 
 // Show alert message
@@ -996,6 +997,93 @@ function extractPlaylistId(url) {
     return match ? match[1] : null;
 }
 
+// Initialize watch speed control in the settings
+function initWatchSpeedControl() {
+    const watchSpeedInput = document.getElementById('watch-speed-input');
+    if (watchSpeedInput) {
+        watchSpeedInput.addEventListener('change', function() {
+            // Update the watch speed display in the stats if it exists
+            const watchSpeedDisplay = document.getElementById('watch-speed-display');
+            if (watchSpeedDisplay) {
+                watchSpeedDisplay.value = this.value;
+            }
+            
+            // Recalculate stats with the new watch speed
+            updateStatsWithWatchSpeed(parseFloat(this.value));
+        });
+    }
+}
+
+// Initialize watch speed display in the stats
+function initWatchSpeedDisplay() {
+    const watchSpeedDisplay = document.getElementById('watch-speed-display');
+    if (watchSpeedDisplay) {
+        watchSpeedDisplay.addEventListener('change', function() {
+            const newSpeed = parseFloat(this.value);
+            
+            // Update the watch speed input in settings
+            const watchSpeedInput = document.getElementById('watch-speed-input');
+            if (watchSpeedInput) {
+                watchSpeedInput.value = newSpeed;
+            }
+            
+            // Recalculate stats with the new watch speed
+            updateStatsWithWatchSpeed(newSpeed);
+        });
+    }
+}
+
+// Update stats based on watch speed
+function updateStatsWithWatchSpeed(watchSpeed) {
+    if (!window.currentVideosData || !window.originalStats) {
+        console.warn('No video data available for recalculation');
+        return;
+    }
+    
+    // Format durations for display
+    const formatTimeFromMinutes = (minutes) => {
+        const hours = Math.floor(minutes / 60);
+        const mins = Math.floor(minutes % 60);
+        const secs = Math.round((minutes % 1) * 60);
+        
+        if (hours > 0) {
+            return `${hours}h ${mins}m`;
+        } else {
+            return `${mins}m ${secs}s`;
+        }
+    };
+    
+    // Calculate total duration in minutes from the videos
+    const totalVideos = window.currentVideosData.length;
+    const totalDurationMinutes = window.currentVideosData.reduce((total, video) => {
+        return total + (video.durationMinutes || 0);
+    }, 0);
+    const avgDurationMinutes = totalDurationMinutes / totalVideos;
+    
+    // Calculate adjusted durations based on watch speed
+    const adjustedTotalDuration = formatTimeFromMinutes(totalDurationMinutes / watchSpeed);
+    const adjustedAvgDuration = formatTimeFromMinutes(avgDurationMinutes / watchSpeed);
+    
+    // Update the stats display
+    const totalDurationElement = document.getElementById('total-duration-value');
+    const avgDurationElement = document.getElementById('avg-duration-value');
+    
+    if (totalDurationElement) {
+        totalDurationElement.textContent = adjustedTotalDuration;
+    }
+    
+    if (avgDurationElement) {
+        avgDurationElement.textContent = adjustedAvgDuration;
+    }
+    
+    // Show a notification about the change
+    showAlert(`Watch speed updated to ${watchSpeed}x. Durations recalculated.`, 'success');
+}
+
+// Store the current videos data globally for recalculation
+window.currentVideosData = null;
+window.originalStats = null;
+
 // Create and display playlist summary with statistics
 function displayPlaylistSummary(videos, stats) {
     const summaryContainer = document.getElementById('playlist-summary');
@@ -1003,6 +1091,16 @@ function displayPlaylistSummary(videos, stats) {
     if (!summaryContainer) {
         console.error('Summary container not found');
         return;
+    }
+    
+    // Store the videos data globally for recalculation when watch speed changes
+    window.currentVideosData = videos;
+    window.originalStats = {...stats};
+    
+    // Make sure the watch speed input in settings matches the current stats
+    const watchSpeedInput = document.getElementById('watch-speed-input');
+    if (watchSpeedInput && stats.watchSpeed) {
+        watchSpeedInput.value = stats.watchSpeed;
     }
     
     // Clear previous content
@@ -1028,17 +1126,27 @@ function displayPlaylistSummary(videos, stats) {
         </div>
         <div class="stat-item">
             <div class="stat-icon"><i class="fas fa-clock"></i></div>
-            <div class="stat-value">${stats.totalDuration || '0:00'}</div>
+            <div class="stat-value" id="total-duration-value">${stats.totalDuration || '0:00'}</div>
             <div class="stat-label">Total Duration</div>
         </div>
         <div class="stat-item">
             <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
-            <div class="stat-value">${stats.avgDuration || '0:00'}</div>
+            <div class="stat-value" id="avg-duration-value">${stats.avgDuration || '0:00'}</div>
             <div class="stat-label">Avg. Duration</div>
         </div>
-        <div class="stat-item">
+        <div class="stat-item watch-speed-control">
             <div class="stat-icon"><i class="fas fa-tachometer-alt"></i></div>
-            <div class="stat-value">${stats.watchSpeed || 1}x</div>
+            <div class="stat-value">
+                <select id="watch-speed-display" class="watch-speed-select">
+                    <option value="0.5">0.5x</option>
+                    <option value="0.75">0.75x</option>
+                    <option value="1" ${stats.watchSpeed == 1 ? 'selected' : ''}>1x</option>
+                    <option value="1.25" ${stats.watchSpeed == 1.25 ? 'selected' : ''}>1.25x</option>
+                    <option value="1.5" ${stats.watchSpeed == 1.5 ? 'selected' : ''}>1.5x</option>
+                    <option value="1.75" ${stats.watchSpeed == 1.75 ? 'selected' : ''}>1.75x</option>
+                    <option value="2" ${stats.watchSpeed == 2 ? 'selected' : ''}>2x</option>
+                </select>
+            </div>
             <div class="stat-label">Watch Speed</div>
         </div>
     `;
@@ -1112,4 +1220,5 @@ function displayPlaylistSummary(videos, stats) {
     initExportOptions();
     initCopyButton();
     initShareFeature();
+    initWatchSpeedDisplay();
 }
