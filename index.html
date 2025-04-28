@@ -4,24 +4,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Playlist Formatter</title>
+    <title>TubeTracker | YouTube Playlist Organizer</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body data-theme="light">
-    <div class="container">
-        <div class="theme-switch-wrapper">
-            <span class="theme-icon"><i class="fas fa-moon"></i></span>
-            <label class="theme-switch">
-                <input type="checkbox" id="theme-toggle">
-                <span class="slider"></span>
-            </label>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fab fa-youtube"></i>
+                </div>
+                <div class="logo-text">TubeTracker</div>
+            </div>
+            <div class="nav-links">
+                <button id="settings-btn" class="nav-btn"><i class="fas fa-cog"></i> Settings</button>
+                <button id="history-btn" class="nav-btn"><i class="fas fa-history"></i> History</button>
+                <div class="theme-switch-wrapper">
+                    <span class="theme-icon"><i class="fas fa-moon"></i></span>
+                    <label class="theme-switch">
+                        <input type="checkbox" id="theme-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
         </div>
+    </nav>
 
+    <div class="container">
         <div class="app-header">
-            <h1><i class="fab fa-youtube"></i> YouTube Playlist Formatter</h1>
-            <p>Extract and format your YouTube playlist information with ease</p>
+            <h1>TubeTracker</h1>
+            <p class="slogan">Organize, format and analyze your YouTube playlists in seconds</p>
         </div>
 
         <div class="input-section">
@@ -30,17 +47,24 @@
                 <input type="text" id="playlist-url" placeholder="https://youtube.com/playlist?list=..." value="">
             </div>
 
-            <div class="input-group">
-                <label for="api-key">YouTube API Key</label>
-                <div class="api-key-container">
-                    <input type="password" id="api-key" placeholder="Enter your YouTube API Key">
-                    <button id="toggle-api-key" class="toggle-btn"><i class="fas fa-eye"></i></button>
+            <div id="api-key-section" style="display: none;">
+                <div class="input-group">
+                    <label for="api-key">YouTube API Key</label>
+                    <div class="api-key-container">
+                        <input type="password" id="api-key" placeholder="Enter your YouTube API Key">
+                        <button id="toggle-api-key" class="toggle-btn"><i class="fas fa-eye"></i></button>
+                    </div>
+                    <div class="api-key-help">
+                        <a href="https://developers.google.com/youtube/v3/getting-started" target="_blank">
+                            How to get an API key <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </div>
                 </div>
-                <div class="api-key-help">
-                    <a href="https://developers.google.com/youtube/v3/getting-started" target="_blank">
-                        How to get an API key <i class="fas fa-external-link-alt"></i>
-                    </a>
-                </div>
+            </div>
+            
+            <div class="api-key-status">
+                <span id="api-key-message">No API key saved</span>
+                <button id="change-api-key" class="text-btn">Change API Key</button>
             </div>
 
             <div class="format-options">
@@ -74,6 +98,16 @@
             </div>
 
             <button id="format-btn" class="primary-btn">Format Playlist</button>
+        </div>
+        
+        <div class="history-section" style="display: none;">
+            <div class="section-header">
+                <h2>Recent Playlists</h2>
+                <button id="clear-history" class="text-btn"><i class="fas fa-trash"></i> Clear History</button>
+            </div>
+            <div id="history-list" class="history-list">
+                <!-- History items will be added here dynamically -->
+            </div>
         </div>
 
         <div class="loading-section" style="display: none;">
@@ -119,9 +153,63 @@
     </div>
 
     <footer>
-        <p>Made with <i class="fas fa-heart"></i> | Created by <a href="https://github.com/Osama-Yusuf"
-                target="_blank">Osama Yusuf</a></p>
+        <p>Made with <i class="fas fa-heart"></i> by <a href="https://github.com/Osama-Yusuf" target="_blank">Osama Yusuf</a></p>
     </footer>
+    
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="settings-group">
+                    <h3>YouTube API Key</h3>
+                    <div class="input-group">
+                        <label for="settings-api-key">Your API Key</label>
+                        <div class="api-key-container">
+                            <input type="password" id="settings-api-key" placeholder="Enter your YouTube API Key">
+                            <button id="settings-toggle-api-key" class="toggle-btn"><i class="fas fa-eye"></i></button>
+                        </div>
+                        <button id="save-api-key" class="secondary-btn">Save API Key</button>
+                    </div>
+                </div>
+                
+                <div class="settings-group">
+                    <h3>Default Formatting</h3>
+                    <div class="option-group">
+                        <label>
+                            <input type="checkbox" id="settings-include-duration" checked>
+                            Include video duration by default
+                        </label>
+                        <label>
+                            <input type="checkbox" id="settings-include-links" checked>
+                            Include video links by default
+                        </label>
+                        <label>
+                            <input type="checkbox" id="settings-include-numbers" checked>
+                            Include video numbers by default
+                        </label>
+                    </div>
+                    
+                    <h3>Default Link Format</h3>
+                    <div class="option-group">
+                        <label>
+                            <input type="radio" name="settings-link-format" id="settings-link-format-short" checked>
+                            Short links (youtu.be)
+                        </label>
+                        <label>
+                            <input type="radio" name="settings-link-format" id="settings-link-format-full">
+                            Full links (youtube.com)
+                        </label>
+                    </div>
+                </div>
+                
+                <button id="save-settings" class="primary-btn">Save Settings</button>
+            </div>
+        </div>
+    </div>
 
     <script src="app.js"></script>
     <script src="ui.js"></script>
