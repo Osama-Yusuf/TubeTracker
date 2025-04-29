@@ -108,84 +108,66 @@ function initAIAssistant() {
     
     // Function to show chat interface
     function showChatInterface(title) {
+        console.log('Showing chat interface');
+        
         // Hide other views
         if (aiOptions) aiOptions.style.display = 'none';
         if (aiResultContainer) aiResultContainer.style.display = 'none';
         
-        // Create chat interface if it doesn't exist
-        let chatInterface = document.querySelector('.ai-chat-interface');
-        
+        // Get the chat interface
+        const chatInterface = document.querySelector('.ai-chat-interface');
         if (!chatInterface) {
-            chatInterface = document.createElement('div');
-            chatInterface.className = 'ai-chat-interface';
-            
-            // Create chat header
-            const chatHeader = document.createElement('div');
-            chatHeader.className = 'ai-chat-header';
-            chatHeader.innerHTML = `
-                <h3 id="ai-chat-title">${title}</h3>
-                <button id="ai-chat-back-btn" class="text-btn"><i class="fas fa-arrow-left"></i> Back</button>
-            `;
-            
-            // Create chat messages container
-            const chatMessages = document.createElement('div');
-            chatMessages.className = 'ai-chat-messages';
-            chatMessages.id = 'ai-chat-messages';
-            
-            // Create initial system message
-            const systemMessage = document.createElement('div');
-            systemMessage.className = 'ai-chat-message system';
-            systemMessage.innerHTML = `
-                <div class="ai-chat-message-content">
-                    <p>Hello! I'm your AI assistant. I've analyzed your playlist and I'm ready to chat about it. What would you like to know?</p>
-                </div>
-            `;
-            chatMessages.appendChild(systemMessage);
-            
-            // Create chat input area
-            const chatInputArea = document.createElement('div');
-            chatInputArea.className = 'ai-chat-input-area';
-            chatInputArea.innerHTML = `
-                <textarea id="ai-chat-input" placeholder="Ask me anything about this playlist..."></textarea>
-                <button id="ai-chat-send-btn" class="primary-btn"><i class="fas fa-paper-plane"></i></button>
-            `;
-            
-            // Assemble chat interface
-            chatInterface.appendChild(chatHeader);
-            chatInterface.appendChild(chatMessages);
-            chatInterface.appendChild(chatInputArea);
-            
-            // Add to modal body
-            const modalBody = document.querySelector('.modal-body');
-            if (modalBody) {
-                modalBody.appendChild(chatInterface);
+            console.error('Chat interface not found in DOM');
+            return;
+        }
+        
+        // Update title if needed
+        const chatTitle = document.getElementById('ai-chat-title');
+        if (chatTitle && title) {
+            chatTitle.textContent = title;
+        }
+        
+        // Clear previous messages except the system welcome message
+        const chatMessages = document.getElementById('ai-chat-messages');
+        if (chatMessages) {
+            // Keep only the first child (system welcome message)
+            while (chatMessages.childNodes.length > 1) {
+                chatMessages.removeChild(chatMessages.lastChild);
             }
+        }
+        
+        // Make sure event listeners are attached
+        const backBtn = document.getElementById('ai-chat-back-btn');
+        const sendBtn = document.getElementById('ai-chat-send-btn');
+        const chatInput = document.getElementById('ai-chat-input');
+        
+        if (backBtn) {
+            // Remove existing listener to prevent duplicates
+            backBtn.removeEventListener('click', showAIOptions);
+            // Add new listener
+            backBtn.addEventListener('click', showAIOptions);
+        }
+        
+        if (sendBtn && chatInput) {
+            // Remove existing listeners
+            const sendHandler = function() {
+                sendChatMessage(chatInput.value);
+            };
             
-            // Add event listeners for chat functionality
-            const backBtn = document.getElementById('ai-chat-back-btn');
-            const sendBtn = document.getElementById('ai-chat-send-btn');
-            const chatInput = document.getElementById('ai-chat-input');
-            
-            if (backBtn) {
-                backBtn.addEventListener('click', showAIOptions);
-            }
-            
-            if (sendBtn && chatInput) {
-                sendBtn.addEventListener('click', function() {
+            const keyHandler = function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
                     sendChatMessage(chatInput.value);
-                });
-                
-                chatInput.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        sendChatMessage(chatInput.value);
-                    }
-                });
-            }
-        } else {
-            // Update title if interface already exists
-            const chatTitle = document.getElementById('ai-chat-title');
-            if (chatTitle) chatTitle.textContent = title;
+                }
+            };
+            
+            // Remove old listeners if any
+            sendBtn.removeEventListener('click', sendHandler);
+            chatInput.removeEventListener('keydown', keyHandler);
+            
+            // Add new listeners
+            sendBtn.addEventListener('click', sendHandler);
+            chatInput.addEventListener('keydown', keyHandler);
         }
         
         // Show chat interface
@@ -199,7 +181,12 @@ function initAIAssistant() {
         const chatMessages = document.getElementById('ai-chat-messages');
         const chatInput = document.getElementById('ai-chat-input');
         
-        if (!chatMessages || !chatInput) return;
+        if (!chatMessages || !chatInput) {
+            console.error('Chat elements not found');
+            return;
+        }
+        
+        console.log('Sending chat message:', message);
         
         // Clear input
         chatInput.value = '';
@@ -244,16 +231,16 @@ function initAIAssistant() {
             
             // Generate prompt for chat
             const prompt = `You are analyzing a YouTube playlist titled "${playlistData.title}" with ${playlistData.videos.length} videos.
-            Here is the list of videos in the playlist:
+Here is the list of videos in the playlist:
 
-            ${playlistData.formattedOutput}
+${playlistData.formattedOutput}
 
-            Total duration: ${playlistData.stats.totalDuration}
-            Average video length: ${playlistData.stats.avgDuration}
+Total duration: ${playlistData.stats.totalDuration}
+Average video length: ${playlistData.stats.avgDuration}
 
-            User question: ${message}
+User question: ${message}
 
-            Please respond to the user's question about this playlist in a helpful, accurate, and concise manner.`;
+Please respond to the user's question about this playlist in a helpful, accurate, and concise manner.`;
             
             // Call Gemini API
             const response = await callGeminiAPI(prompt, apiKey);
@@ -418,52 +405,64 @@ Please respond to the user's question about this playlist in a helpful, accurate
     
     // Call Gemini API
     async function callGeminiAPI(prompt, apiKey) {
-        // Gemini API endpoint
-        const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
-        
-        // Request data
-        const requestData = {
-            contents: [
-                {
-                    parts: [
-                        {
-                            text: prompt
-                        }
-                    ]
+        try {
+            // Gemini API endpoint
+            const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+            
+            // Request data
+            const requestData = {
+                contents: [
+                    {
+                        parts: [
+                            {
+                                text: prompt
+                            }
+                        ]
+                    }
+                ],
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 2048
                 }
-            ],
-            generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 2048
+            };
+            
+            console.log('Calling Gemini API with prompt:', prompt.substring(0, 100) + '...');
+            
+            // Make API request
+            const response = await fetch(`${endpoint}?key=${apiKey}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Gemini API error:', errorData);
+                throw new Error(errorData.error?.message || 'Error calling Gemini API');
             }
-        };
-        
-        // Make API request
-        const response = await fetch(`${endpoint}?key=${apiKey}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestData)
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error?.message || 'Error calling Gemini API');
-        }
-        
-        const data = await response.json();
-        
-        // Extract the text from the response
-        if (data.candidates && data.candidates[0]?.content?.parts) {
-            return data.candidates[0].content.parts[0].text;
-        } else {
-            throw new Error('Invalid response from Gemini API');
+            
+            const data = await response.json();
+            console.log('Gemini API response:', data);
+            
+            // Extract the text from the response
+            if (data.candidates && data.candidates[0]?.content?.parts && data.candidates[0].content.parts.length > 0) {
+                return data.candidates[0].content.parts[0].text;
+            } else {
+                console.error('Invalid Gemini API response structure:', data);
+                throw new Error('Invalid response from Gemini API');
+            }
+        } catch (error) {
+            console.error('Error in callGeminiAPI:', error);
+            throw error;
         }
     }
     
     // Format AI response with markdown
     function formatAIResponse(text) {
+        if (!text) return 'No response received from AI.';
+        
         // Simple markdown formatting
         return text
             .replace(/^# (.*$)/gm, '<h2>$1</h2>')

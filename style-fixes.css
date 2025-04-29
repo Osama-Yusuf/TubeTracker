@@ -306,6 +306,7 @@
     height: 500px;
     max-height: 70vh;
     width: 100%;
+    box-sizing: border-box;
 }
 
 .ai-chat-header {
@@ -378,10 +379,13 @@
 .ai-chat-input-area {
     display: flex;
     gap: 10px;
+    width: 100%;
+    margin-top: 15px;
 }
 
 #ai-chat-input {
     flex: 1;
+    width: calc(100% - 60px); /* Account for send button width and gap */
     padding: 12px 15px;
     border-radius: var(--btn-radius);
     border: 1px solid var(--border-color);
@@ -390,6 +394,11 @@
     resize: none;
     min-height: 50px;
     max-height: 120px;
+    font-size: 14px;
+    font-family: inherit;
+    box-sizing: border-box;
+    line-height: 1.4;
+    overflow-y: auto;
 }
 
 #ai-chat-send-btn {

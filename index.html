@@ -64,7 +64,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="api-key-status">
                 <span id="api-key-message">No API key saved</span>
                 <button id="change-api-key" class="text-btn">Change API Key</button>
@@ -77,7 +77,7 @@
 
             <button id="format-btn" class="primary-btn">Format Playlist</button>
         </div>
-        
+
         <div class="history-section" style="display: none;">
             <div class="section-header">
                 <h2>Recent Playlists</h2>
@@ -100,7 +100,7 @@
             <div class="summary-header">
                 <h3>Playlist Summary</h3>
             </div>
-            
+
             <div class="playlist-stats">
                 <div class="stat-item">
                     <div class="stat-icon"><i class="fas fa-film"></i></div>
@@ -123,7 +123,7 @@
                     <div class="stat-label">Watch Speed</div>
                 </div>
             </div>
-            
+
             <!-- Formatted output moved here -->
             <div class="result-header">
                 <h2 id="playlist-title">Formatted Playlist</h2>
@@ -146,24 +146,25 @@
                 </div>
             </div>
             <textarea id="formatted-output" readonly></textarea>
-            </div>
-            
-            <div id="visualization-container" class="visualization-container" style="display: none;">
-                <canvas id="duration-chart"></canvas>
-            </div>
         </div>
 
-        <div class="error-section" style="display: none;">
-            <div class="error-icon"><i class="fas fa-exclamation-circle"></i></div>
-            <h3>Error</h3>
-            <p id="error-message"></p>
+        <div id="visualization-container" class="visualization-container" style="display: none;">
+            <canvas id="duration-chart"></canvas>
         </div>
     </div>
 
+    <div class="error-section" style="display: none;">
+        <div class="error-icon"><i class="fas fa-exclamation-circle"></i></div>
+        <h3>Error</h3>
+        <p id="error-message"></p>
+    </div>
+    </div>
+
     <footer>
-        <p>Made with <i class="fas fa-heart"></i> by <a href="https://github.com/Osama-Yusuf" target="_blank">Osama Yusuf</a></p>
+        <p>Made with <i class="fas fa-heart"></i> by <a href="https://github.com/Osama-Yusuf" target="_blank">Osama
+                Yusuf</a></p>
     </footer>
-    
+
     <!-- Share Modal -->
     <div id="share-modal" class="modal">
         <div class="modal-content">
@@ -178,15 +179,19 @@
                         <input type="text" id="share-link" readonly>
                         <button id="copy-link-btn" class="btn"><i class="fas fa-copy"></i> Copy</button>
                     </div>
-                    
+
                     <h3>Share on Social Media</h3>
                     <div class="social-buttons">
-                        <button id="twitter-share" class="social-btn twitter"><i class="fab fa-twitter"></i> Twitter</button>
-                        <button id="facebook-share" class="social-btn facebook"><i class="fab fa-facebook-f"></i> Facebook</button>
-                        <button id="whatsapp-share" class="social-btn whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp</button>
-                        <button id="telegram-share" class="social-btn telegram"><i class="fab fa-telegram-plane"></i> Telegram</button>
+                        <button id="twitter-share" class="social-btn twitter"><i class="fab fa-twitter"></i>
+                            Twitter</button>
+                        <button id="facebook-share" class="social-btn facebook"><i class="fab fa-facebook-f"></i>
+                            Facebook</button>
+                        <button id="whatsapp-share" class="social-btn whatsapp"><i class="fab fa-whatsapp"></i>
+                            WhatsApp</button>
+                        <button id="telegram-share" class="social-btn telegram"><i class="fab fa-telegram-plane"></i>
+                            Telegram</button>
                     </div>
-                    
+
                     <h3>Embed Code</h3>
                     <div class="embed-container">
                         <textarea id="embed-code" readonly></textarea>
@@ -196,7 +201,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Settings Modal -->
     <div id="settings-modal" class="modal">
         <div class="modal-content">
@@ -214,7 +219,7 @@
                     <button id="save-api-key" class="btn">Save API Key</button>
                     <div id="api-key-status"></div>
                 </div>
-                
+
                 <div class="settings-group">
                     <h3>Display Options</h3>
                     <div class="checkbox-group">
@@ -223,7 +228,7 @@
                         <span class="toggle-slider"></span>
                     </div>
                 </div>
-                
+
                 <div class="settings-group">
                     <h3>Watch Speed</h3>
                     <select id="watch-speed-input" class="settings-select">
@@ -233,9 +238,10 @@
                         <option value="1.75">1.75x</option>
                         <option value="2">2x</option>
                     </select>
-                    <p class="settings-help">This affects how the total watch time is calculated in the playlist summary.</p>
+                    <p class="settings-help">This affects how the total watch time is calculated in the playlist
+                        summary.</p>
                 </div>
-                
+
                 <div class="settings-group">
                     <h3>Formatting Options</h3>
                     <div class="option-group">
@@ -253,7 +259,7 @@
                         </label>
                     </div>
                 </div>
-                
+
                 <div class="settings-group">
                     <h3>Link Format</h3>
                     <div class="option-group">
@@ -299,14 +305,14 @@
                             <span>Chat with AI</span>
                         </button>
                     </div>
-                    
+
                     <div class="ai-prompt-container">
                         <h3>Custom Prompt</h3>
                         <textarea id="ai-prompt" placeholder="Ask anything about this playlist..."></textarea>
                         <button id="ai-submit-prompt" class="primary-btn">Submit</button>
                     </div>
                 </div>
-                
+
                 <div class="ai-result-container" style="display: none;">
                     <div class="ai-result-header">
                         <h3 id="ai-result-title">Analysis Results</h3>
@@ -318,6 +324,30 @@
                     </div>
                     <div id="ai-result" class="ai-result"></div>
                 </div>
+
+                <div class="ai-chat-interface" style="display: none;">
+                    <div class="ai-chat-header">
+                        <h3 id="ai-chat-title">Chat with AI about your Playlist</h3>
+                        <button id="ai-chat-back-btn" class="text-btn"><i class="fas fa-arrow-left"></i> Back</button>
+                    </div>
+                    <div class="ai-chat-messages" id="ai-chat-messages">
+                        <div class="ai-chat-message system">
+                            <div class="ai-chat-message-content">
+                                <p>Hello! I'm your AI assistant. I've analyzed your playlist and I'm ready to chat about
+                                    it. What would you like to know?</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="padding: 15px; width: 100%; position: relative; bottom: 0; left: 0; right: 0;">
+                        <div style="display: flex; width: 100%; gap: 10px;">
+                            <input type="text" id="ai-chat-input" placeholder="Ask me anything about this playlist..."
+                                style="flex: 9; padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; min-height: 50px; width: 85%;">
+                            <button id="ai-chat-send-btn" class="primary-btn"
+                                style="flex: 1; height: 50px; padding: 0 15px; width: 50px; min-width: 50px;"><i
+                                    class="fas fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -327,4 +357,5 @@
     <script src="formatter.js"></script>
     <script src="ai-assistant.js"></script>
 </body>
+
 </html>
