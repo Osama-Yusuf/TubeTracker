@@ -186,7 +186,7 @@
 
 .export-btn {
     padding: 8px 12px;
-    background-color: var(--primary-color);
+    background-color: #A55B4B;
     color: white;
     border: none;
     border-radius: var(--btn-radius);
@@ -201,6 +201,7 @@
 .export-btn:hover {
     background-color: var(--secondary-color);
     transform: translateY(-2px);
+    color: black;
 }
 
 /* Output container */
