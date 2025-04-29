@@ -1014,6 +1014,42 @@ function initWatchSpeedControl() {
     }
 }
 
+// Initialize AI button event listener
+function initAIButton() {
+    const aiButton = document.getElementById('ai-assistant-btn');
+    const aiModal = document.getElementById('ai-modal');
+    
+    if (aiButton && aiModal) {
+        // Remove any existing event listeners
+        aiButton.removeEventListener('click', openAIModal);
+        
+        // Add new event listener
+        aiButton.addEventListener('click', openAIModal);
+    }
+}
+
+// Function to open AI modal
+function openAIModal() {
+    const aiModal = document.getElementById('ai-modal');
+    
+    // Check if we have a formatted playlist
+    if (!window.lastFormattedOutput) {
+        showAlert('Please format a playlist first before using the AI Assistant.', 'error');
+        return;
+    }
+    
+    if (aiModal) {
+        aiModal.style.display = 'block';
+        
+        // Reset the view to options
+        const aiOptions = document.querySelector('.ai-options');
+        const aiResultContainer = document.querySelector('.ai-result-container');
+        
+        if (aiOptions) aiOptions.style.display = 'block';
+        if (aiResultContainer) aiResultContainer.style.display = 'none';
+    }
+}
+
 // Initialize watch speed display in the stats
 function initWatchSpeedDisplay() {
     const watchSpeedDisplay = document.getElementById('watch-speed-display');
@@ -1176,6 +1212,7 @@ function displayPlaylistSummary(videos, stats) {
                 </div>
             </div>
             <button class="export-btn" id="share-btn"><i class="fas fa-share-alt"></i> Share</button>
+            <button class="export-btn" id="ai-assistant-btn"><i class="fas fa-robot"></i> AI</button>
         </div>
     `;
     
@@ -1208,17 +1245,21 @@ function displayPlaylistSummary(videos, stats) {
     summaryContainer.appendChild(resultHeader);
     summaryContainer.appendChild(outputContainer);
     
-    // Show the summary with a nice fade-in effect
+    // Show the summary container
     summaryContainer.style.display = 'block';
-    summaryContainer.style.opacity = '0';
-    setTimeout(() => {
-        summaryContainer.style.transition = 'opacity 0.3s ease-in-out';
-        summaryContainer.style.opacity = '1';
-    }, 10);
+    
+    // Show the AI button now that a playlist is loaded
+    const aiButton = document.getElementById('ai-assistant-btn');
+    if (aiButton) {
+        aiButton.style.display = 'inline-block';
+    }
     
     // Reinitialize the export options and copy button
     initExportOptions();
     initCopyButton();
     initShareFeature();
     initWatchSpeedDisplay();
+    
+    // Initialize AI button event listener
+    initAIButton();
 }

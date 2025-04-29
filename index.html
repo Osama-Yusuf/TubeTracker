@@ -34,6 +34,7 @@
                     </label>
                 </div>
             </div>
+            <!-- No action buttons in nav bar -->
         </div>
     </nav>
 
@@ -141,6 +142,7 @@
                     </div>
                     <button class="export-btn" id="copy-btn"><i class="fas fa-copy"></i> Copy</button>
                     <button class="export-btn" id="share-btn"><i class="fas fa-share-alt"></i> Share</button>
+                    <button class="export-btn" id="ai-assistant-btn"><i class="fas fa-robot"></i> AI</button>
                 </div>
             </div>
             <textarea id="formatted-output" readonly></textarea>
@@ -269,8 +271,56 @@
         </div>
     </div>
 
+    <!-- AI Assistant Modal -->
+    <div id="ai-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>AI Playlist Assistant</h2>
+                <span class="close-modal" id="close-ai-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="ai-options">
+                    <h3>What would you like to do?</h3>
+                    <div class="ai-actions">
+                        <button id="ai-analyze-btn" class="ai-action-btn">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Analyze Playlist</span>
+                        </button>
+                        <button id="ai-recommend-btn" class="ai-action-btn">
+                            <i class="fas fa-lightbulb"></i>
+                            <span>Recommend Similar</span>
+                        </button>
+                        <button id="ai-summarize-btn" class="ai-action-btn">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Generate Summary</span>
+                        </button>
+                    </div>
+                    
+                    <div class="ai-prompt-container">
+                        <h3>Custom Prompt</h3>
+                        <textarea id="ai-prompt" placeholder="Ask anything about this playlist..."></textarea>
+                        <button id="ai-submit-prompt" class="primary-btn">Submit</button>
+                    </div>
+                </div>
+                
+                <div class="ai-result-container" style="display: none;">
+                    <div class="ai-result-header">
+                        <h3 id="ai-result-title">Analysis Results</h3>
+                        <button id="ai-back-btn" class="text-btn"><i class="fas fa-arrow-left"></i> Back</button>
+                    </div>
+                    <div id="ai-loading" class="ai-loading" style="display: none;">
+                        <div class="ai-spinner"></div>
+                        <p>Thinking...</p>
+                    </div>
+                    <div id="ai-result" class="ai-result"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="chart.js"></script>
     <script src="fixed-ui.js"></script>
     <script src="formatter.js"></script>
+    <script src="ai-assistant.js"></script>
 </body>
 </html>

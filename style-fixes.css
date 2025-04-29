@@ -204,6 +204,101 @@
     color: black;
 }
 
+/* AI Assistant Styles */
+.ai-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.ai-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--card-radius);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 1;
+    min-width: 120px;
+}
+
+.ai-action-btn i {
+    font-size: 24px;
+    margin-bottom: 10px;
+    color: #A55B4B;
+}
+
+.ai-action-btn span {
+    color: white;
+}
+
+.ai-action-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px var(--shadow-color);
+    border-color: #DCA06D;
+}
+
+.ai-prompt-container {
+    margin-top: 20px;
+}
+
+.ai-prompt-container textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px;
+    border-radius: var(--btn-radius);
+    border: 1px solid var(--border-color);
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    margin-bottom: 15px;
+    resize: vertical;
+}
+
+.ai-result {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: var(--card-bg);
+    border-radius: var(--card-radius);
+    border: 1px solid var(--border-color);
+    white-space: pre-wrap;
+    line-height: 1.6;
+}
+
+.ai-result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.ai-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+}
+
+.ai-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-left-color: #A55B4B;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 /* Output container */
 .output-container {
     position: relative;
