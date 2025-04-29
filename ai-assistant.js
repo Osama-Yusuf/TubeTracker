@@ -22,6 +22,7 @@ function initAIAssistant() {
     const analyzeBtn = document.getElementById('ai-analyze-btn');
     const recommendBtn = document.getElementById('ai-recommend-btn');
     const summarizeBtn = document.getElementById('ai-summarize-btn');
+    const chatBtn = document.getElementById('ai-chat-btn');
     const submitPromptBtn = document.getElementById('ai-submit-prompt');
     
     // AI result elements
@@ -66,6 +67,12 @@ function initAIAssistant() {
         });
     }
     
+    if (chatBtn) {
+        chatBtn.addEventListener('click', function() {
+            showChatInterface('Chat with AI about your Playlist');
+        });
+    }
+    
     if (submitPromptBtn) {
         submitPromptBtn.addEventListener('click', function() {
             const promptText = document.getElementById('ai-prompt').value.trim();
@@ -82,6 +89,10 @@ function initAIAssistant() {
         if (aiOptions) aiOptions.style.display = 'block';
         if (aiResultContainer) aiResultContainer.style.display = 'none';
         if (aiResult) aiResult.innerHTML = '';
+        
+        // Hide chat interface if it exists
+        const chatInterface = document.querySelector('.ai-chat-interface');
+        if (chatInterface) chatInterface.style.display = 'none';
     }
     
     // Function to show AI results view
@@ -89,6 +100,199 @@ function initAIAssistant() {
         if (aiOptions) aiOptions.style.display = 'none';
         if (aiResultContainer) aiResultContainer.style.display = 'block';
         if (aiResultTitle) aiResultTitle.textContent = title || 'AI Results';
+        
+        // Hide chat interface if it exists
+        const chatInterface = document.querySelector('.ai-chat-interface');
+        if (chatInterface) chatInterface.style.display = 'none';
+    }
+    
+    // Function to show chat interface
+    function showChatInterface(title) {
+        // Hide other views
+        if (aiOptions) aiOptions.style.display = 'none';
+        if (aiResultContainer) aiResultContainer.style.display = 'none';
+        
+        // Create chat interface if it doesn't exist
+        let chatInterface = document.querySelector('.ai-chat-interface');
+        
+        if (!chatInterface) {
+            chatInterface = document.createElement('div');
+            chatInterface.className = 'ai-chat-interface';
+            
+            // Create chat header
+            const chatHeader = document.createElement('div');
+            chatHeader.className = 'ai-chat-header';
+            chatHeader.innerHTML = `
+                <h3 id="ai-chat-title">${title}</h3>
+                <button id="ai-chat-back-btn" class="text-btn"><i class="fas fa-arrow-left"></i> Back</button>
+            `;
+            
+            // Create chat messages container
+            const chatMessages = document.createElement('div');
+            chatMessages.className = 'ai-chat-messages';
+            chatMessages.id = 'ai-chat-messages';
+            
+            // Create initial system message
+            const systemMessage = document.createElement('div');
+            systemMessage.className = 'ai-chat-message system';
+            systemMessage.innerHTML = `
+                <div class="ai-chat-message-content">
+                    <p>Hello! I'm your AI assistant. I've analyzed your playlist and I'm ready to chat about it. What would you like to know?</p>
+                </div>
+            `;
+            chatMessages.appendChild(systemMessage);
+            
+            // Create chat input area
+            const chatInputArea = document.createElement('div');
+            chatInputArea.className = 'ai-chat-input-area';
+            chatInputArea.innerHTML = `
+                <textarea id="ai-chat-input" placeholder="Ask me anything about this playlist..."></textarea>
+                <button id="ai-chat-send-btn" class="primary-btn"><i class="fas fa-paper-plane"></i></button>
+            `;
+            
+            // Assemble chat interface
+            chatInterface.appendChild(chatHeader);
+            chatInterface.appendChild(chatMessages);
+            chatInterface.appendChild(chatInputArea);
+            
+            // Add to modal body
+            const modalBody = document.querySelector('.modal-body');
+            if (modalBody) {
+                modalBody.appendChild(chatInterface);
+            }
+            
+            // Add event listeners for chat functionality
+            const backBtn = document.getElementById('ai-chat-back-btn');
+            const sendBtn = document.getElementById('ai-chat-send-btn');
+            const chatInput = document.getElementById('ai-chat-input');
+            
+            if (backBtn) {
+                backBtn.addEventListener('click', showAIOptions);
+            }
+            
+            if (sendBtn && chatInput) {
+                sendBtn.addEventListener('click', function() {
+                    sendChatMessage(chatInput.value);
+                });
+                
+                chatInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendChatMessage(chatInput.value);
+                    }
+                });
+            }
+        } else {
+            // Update title if interface already exists
+            const chatTitle = document.getElementById('ai-chat-title');
+            if (chatTitle) chatTitle.textContent = title;
+        }
+        
+        // Show chat interface
+        chatInterface.style.display = 'flex';
+    }
+    
+    // Function to send a chat message
+    async function sendChatMessage(message) {
+        if (!message.trim()) return;
+        
+        const chatMessages = document.getElementById('ai-chat-messages');
+        const chatInput = document.getElementById('ai-chat-input');
+        
+        if (!chatMessages || !chatInput) return;
+        
+        // Clear input
+        chatInput.value = '';
+        
+        // Add user message to chat
+        const userMessage = document.createElement('div');
+        userMessage.className = 'ai-chat-message user';
+        userMessage.innerHTML = `
+            <div class="ai-chat-message-content">
+                <p>${message}</p>
+            </div>
+        `;
+        chatMessages.appendChild(userMessage);
+        
+        // Add loading message
+        const loadingMessage = document.createElement('div');
+        loadingMessage.className = 'ai-chat-message ai loading';
+        loadingMessage.innerHTML = `
+            <div class="ai-chat-message-content">
+                <div class="ai-chat-loading-dots">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        `;
+        chatMessages.appendChild(loadingMessage);
+        
+        // Scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        try {
+            // Get the API key
+            const apiKey = localStorage.getItem('youtubeApiKey');
+            if (!apiKey) {
+                throw new Error('API key not found. Please set your API key in settings.');
+            }
+            
+            // Get the playlist data
+            const playlistData = getPlaylistDataForAI();
+            if (!playlistData) {
+                throw new Error('No playlist data available.');
+            }
+            
+            // Generate prompt for chat
+            const prompt = `You are analyzing a YouTube playlist titled "${playlistData.title}" with ${playlistData.videos.length} videos.
+            Here is the list of videos in the playlist:
+
+            ${playlistData.formattedOutput}
+
+            Total duration: ${playlistData.stats.totalDuration}
+            Average video length: ${playlistData.stats.avgDuration}
+
+            User question: ${message}
+
+            Please respond to the user's question about this playlist in a helpful, accurate, and concise manner.`;
+            
+            // Call Gemini API
+            const response = await callGeminiAPI(prompt, apiKey);
+            
+            // Remove loading message
+            chatMessages.removeChild(loadingMessage);
+            
+            // Add AI response to chat
+            const aiMessage = document.createElement('div');
+            aiMessage.className = 'ai-chat-message ai';
+            aiMessage.innerHTML = `
+                <div class="ai-chat-message-content">
+                    <p>${formatAIResponse(response)}</p>
+                </div>
+            `;
+            chatMessages.appendChild(aiMessage);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+        } catch (error) {
+            console.error('Chat error:', error);
+            
+            // Remove loading message
+            chatMessages.removeChild(loadingMessage);
+            
+            // Add error message
+            const errorMessage = document.createElement('div');
+            errorMessage.className = 'ai-chat-message system error';
+            errorMessage.innerHTML = `
+                <div class="ai-chat-message-content">
+                    <p><i class="fas fa-exclamation-circle"></i> ${error.message || 'An error occurred while processing your request.'}</p>
+                </div>
+            `;
+            chatMessages.appendChild(errorMessage);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
     }
     
     // Process AI request based on type
