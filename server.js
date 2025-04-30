@@ -13,44 +13,104 @@ const child_process = require('child_process');
 const PORT = 3000;
 
 // Check if yt-dlp is installed and install it if not found
-exec('which yt-dlp', (error, stdout, stderr) => {
-    if (error) {
-        console.log('yt-dlp is not installed. Attempting to install it automatically...');
-        
-        // Check if curl or wget is available
+const localBinDir = path.join(__dirname, 'bin');
+const ytdlpPath = path.join(localBinDir, 'yt-dlp');
+
+// Create bin directory if it doesn't exist
+if (!fs.existsSync(localBinDir)) {
+    fs.mkdirSync(localBinDir);
+    console.log('Created bin directory for local executables');
+}
+
+// Function to check if yt-dlp is in PATH or in our local bin
+function checkYtDlp() {
+    return new Promise((resolve) => {
+        exec('which yt-dlp', (error, stdout) => {
+            if (!error && stdout) {
+                console.log(`yt-dlp detected in system PATH at: ${stdout.trim()}`);
+                resolve(stdout.trim());
+            } else if (fs.existsSync(ytdlpPath) && fs.statSync(ytdlpPath).isFile()) {
+                // Check if our local copy exists and is executable
+                try {
+                    fs.accessSync(ytdlpPath, fs.constants.X_OK);
+                    console.log(`yt-dlp detected in local bin at: ${ytdlpPath}`);
+                    resolve(ytdlpPath);
+                } catch (err) {
+                    console.log('Local yt-dlp exists but is not executable, fixing permissions...');
+                    fs.chmodSync(ytdlpPath, '755');
+                    console.log(`Made local yt-dlp executable at: ${ytdlpPath}`);
+                    resolve(ytdlpPath);
+                }
+            } else {
+                resolve(null);
+            }
+        });
+    });
+}
+
+// Function to install yt-dlp locally without sudo
+async function installYtDlp() {
+    console.log('yt-dlp not found. Attempting to install it locally...');
+    
+    // Check if curl or wget is available
+    return new Promise((resolve, reject) => {
         exec('which curl wget', (cmdError, cmdStdout) => {
             const hasCurl = cmdStdout.includes('curl');
             const hasWget = cmdStdout.includes('wget');
             const ytdlpUrl = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp';
-            const installDir = '/usr/local/bin';
-            let installCmd;
+            let downloadCmd;
             
             if (hasCurl) {
                 console.log('Using curl to download yt-dlp...');
-                installCmd = `curl -L ${ytdlpUrl} -o /tmp/yt-dlp && chmod +x /tmp/yt-dlp && sudo mv /tmp/yt-dlp ${installDir}/yt-dlp`;
+                downloadCmd = `curl -L ${ytdlpUrl} -o ${ytdlpPath}`;
             } else if (hasWget) {
                 console.log('Using wget to download yt-dlp...');
-                installCmd = `wget ${ytdlpUrl} -O /tmp/yt-dlp && chmod +x /tmp/yt-dlp && sudo mv /tmp/yt-dlp ${installDir}/yt-dlp`;
+                downloadCmd = `wget ${ytdlpUrl} -O ${ytdlpPath}`;
             } else {
-                console.error('Neither curl nor wget is available. Please install yt-dlp manually.');
-                console.error('Installation instructions: https://github.com/ytdl-org/yt-dlp#installation');
+                const errorMsg = 'Neither curl nor wget is available. Cannot install yt-dlp automatically.';
+                console.error(errorMsg);
+                reject(new Error(errorMsg));
                 return;
             }
             
-            console.log('Executing:', installCmd);
-            exec(installCmd, (installError, installStdout, installStderr) => {
+            console.log('Executing:', downloadCmd);
+            exec(downloadCmd, (installError, installStdout, installStderr) => {
                 if (installError) {
-                    console.error('Failed to install yt-dlp automatically:', installError.message);
-                    console.error('You may need to install it manually: https://github.com/ytdl-org/yt-dlp#installation');
+                    console.error('Failed to download yt-dlp:', installError.message);
                     if (installStderr) console.error(installStderr);
-                } else {
-                    console.log('yt-dlp installed successfully!');
-                    if (installStdout) console.log(installStdout);
+                    reject(installError);
+                    return;
+                }
+                
+                // Make the file executable
+                try {
+                    fs.chmodSync(ytdlpPath, '755');
+                    console.log('yt-dlp installed successfully and made executable!');
+                    resolve(ytdlpPath);
+                } catch (chmodError) {
+                    console.error('Failed to make yt-dlp executable:', chmodError.message);
+                    reject(chmodError);
                 }
             });
         });
+    });
+}
+
+// Initialize yt-dlp
+checkYtDlp().then(async (ytdlpLocation) => {
+    if (!ytdlpLocation) {
+        try {
+            await installYtDlp();
+            // Add the local bin directory to PATH for child processes
+            process.env.PATH = `${localBinDir}:${process.env.PATH}`;
+        } catch (error) {
+            console.error('Error during yt-dlp installation:', error.message);
+        }
     } else {
-        console.log(`yt-dlp detected at: ${stdout.trim()}`);
+        // If yt-dlp is already installed, make sure it's in the PATH
+        if (ytdlpLocation === ytdlpPath) {
+            process.env.PATH = `${localBinDir}:${process.env.PATH}`;
+        }
     }
 });
 
