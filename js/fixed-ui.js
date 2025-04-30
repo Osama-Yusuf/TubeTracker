@@ -2,16 +2,76 @@
 // Handles all UI interactions and localStorage functionality
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize core functionality
-    initThemeToggle();
-    initApiKey();
-    initModalButtons();
-    initHistoryFeature();
-    initExportOptions();
-    initShareFeature();
-    initFormatButton();
-    initCopyButton();
-    initWatchSpeedControl();
+    console.log('DOM fully loaded - initializing TubeTracker');
+    
+    // Initialize core functionality with proper error handling
+    try {
+        initThemeToggle();
+        console.log('Theme toggle initialized');
+    } catch (error) {
+        console.error('Error initializing theme toggle:', error);
+    }
+    
+    try {
+        initApiKey();
+        console.log('API key initialized');
+    } catch (error) {
+        console.error('Error initializing API key:', error);
+    }
+    
+    try {
+        initModalButtons();
+        console.log('Modal buttons initialized');
+    } catch (error) {
+        console.error('Error initializing modal buttons:', error);
+    }
+    
+    try {
+        initHistoryFeature();
+        console.log('History feature initialized');
+    } catch (error) {
+        console.error('Error initializing history feature:', error);
+    }
+    
+    try {
+        initExportOptions();
+        console.log('Export options initialized');
+    } catch (error) {
+        console.error('Error initializing export options:', error);
+    }
+    
+    try {
+        initShareFeature();
+        console.log('Share feature initialized');
+    } catch (error) {
+        console.error('Error initializing share feature:', error);
+    }
+    
+    try {
+        initFormatButton();
+        console.log('Format button initialized');
+    } catch (error) {
+        console.error('Error initializing format button:', error);
+    }
+    
+    try {
+        initCopyButton();
+        console.log('Copy button initialized');
+    } catch (error) {
+        console.error('Error initializing copy button:', error);
+    }
+    
+    try {
+        initWatchSpeedControl();
+        console.log('Watch speed control initialized');
+    } catch (error) {
+        console.error('Error initializing watch speed control:', error);
+    }
+    
+    // Check localStorage items
+    console.log('Theme from localStorage:', localStorage.getItem('theme'));
+    console.log('API key exists in localStorage:', !!localStorage.getItem('youtubeApiKey'));
+    console.log('History exists in localStorage:', !!localStorage.getItem('playlistHistory'));
 });
 
 // Show alert message
@@ -143,13 +203,22 @@ function initThemeToggle() {
     
     if (!themeToggle || !themeIcon) return;
     
-    // Load saved theme preference
-    const savedTheme = localStorage.getItem('theme');
+    // Load saved theme preference with error handling
+    let savedTheme = null;
+    try {
+        savedTheme = localStorage.getItem('theme');
+        console.log('Theme from localStorage:', savedTheme);
+    } catch (error) {
+        console.error('Error retrieving theme from localStorage:', error);
+    }
+    
     if (savedTheme === 'dark') {
+        console.log('Applying dark theme');
         document.body.setAttribute('data-theme', 'dark');
         themeToggle.checked = true;
         themeIcon.className = 'fas fa-sun';
     } else {
+        console.log('Applying light theme (default)');
         document.body.setAttribute('data-theme', 'light');
         themeToggle.checked = false;
         themeIcon.className = 'fas fa-moon';
@@ -184,12 +253,19 @@ function initApiKey() {
     const saveApiKeyBtn = document.getElementById('save-api-key');
     const apiKeyStatus = document.getElementById('api-key-status');
     
-    // Initialize API key in both places
-    const savedApiKey = localStorage.getItem('youtubeApiKey');
+    // Initialize API key in both places with error handling
+    let savedApiKey = null;
+    try {
+        savedApiKey = localStorage.getItem('youtubeApiKey');
+        console.log('API key exists in localStorage:', !!savedApiKey);
+    } catch (error) {
+        console.error('Error retrieving API key from localStorage:', error);
+    }
     
     // Update main UI API key
     if (apiKeyInput) {
         if (savedApiKey) {
+            console.log('Setting API key in input field');
             apiKeyInput.value = savedApiKey;
             
             // Update the API key message
@@ -207,6 +283,7 @@ function initApiKey() {
                 changeApiKeyBtn.style.display = 'inline-block';
             }
         } else {
+            console.log('No API key found in localStorage');
             // No API key saved
             if (apiKeyMessage) {
                 apiKeyMessage.textContent = 'No API key saved';
@@ -414,16 +491,32 @@ function initHistoryFeature() {
 
 function updateHistoryList() {
     const historyList = document.getElementById('history-list');
-    if (!historyList) return;
+    if (!historyList) {
+        console.error('History list element not found');
+        return;
+    }
     
     // Clear previous items
     historyList.innerHTML = '';
     
-    // Get history from localStorage
-    const playlistHistory = JSON.parse(localStorage.getItem('playlistHistory')) || [];
+    // Get history from localStorage with error handling
+    let playlistHistory = [];
+    try {
+        const historyData = localStorage.getItem('playlistHistory');
+        console.log('Raw history data from localStorage:', historyData);
+        
+        if (historyData) {
+            playlistHistory = JSON.parse(historyData);
+            console.log('Parsed history data:', playlistHistory);
+        } else {
+            console.log('No history data found in localStorage');
+        }
+    } catch (error) {
+        console.error('Error parsing history data from localStorage:', error);
+    }
     
     // If no history, show message
-    if (playlistHistory.length === 0) {
+    if (!playlistHistory || playlistHistory.length === 0) {
         historyList.innerHTML = '<p class="no-history">No playlists in history yet.</p>';
         return;
     }

@@ -1,9 +1,9 @@
 // TubeTracker - AI Assistant
 // Integrates with Gemini 1.5 Flash for playlist analysis and recommendations
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     initAIAssistant();
-    
+
     // Hide AI button initially until a playlist is loaded
     const aiButton = document.getElementById('ai-assistant-btn');
     if (aiButton) {
@@ -17,14 +17,14 @@ function initAIAssistant() {
     const aiAssistantBtn = document.getElementById('ai-assistant-btn');
     const aiModal = document.getElementById('ai-modal');
     const closeAiModal = document.getElementById('close-ai-modal');
-    
+
     // AI action buttons
     const analyzeBtn = document.getElementById('ai-analyze-btn');
     const recommendBtn = document.getElementById('ai-recommend-btn');
     const summarizeBtn = document.getElementById('ai-summarize-btn');
     const chatBtn = document.getElementById('ai-chat-btn');
     const submitPromptBtn = document.getElementById('ai-submit-prompt');
-    
+
     // AI result elements
     const aiOptions = document.querySelector('.ai-options');
     const aiResultContainer = document.querySelector('.ai-result-container');
@@ -32,49 +32,49 @@ function initAIAssistant() {
     const aiResult = document.getElementById('ai-result');
     const aiLoading = document.getElementById('ai-loading');
     const aiBackBtn = document.getElementById('ai-back-btn');
-    
+
     // Note: The AI button click event is now handled in fixed-ui.js
     // This is because the button is created dynamically after a playlist is loaded
-    
+
     // Close AI modal
     if (closeAiModal) {
-        closeAiModal.addEventListener('click', function() {
+        closeAiModal.addEventListener('click', function () {
             aiModal.style.display = 'none';
         });
     }
-    
+
     // Back button to return to options
     if (aiBackBtn) {
         aiBackBtn.addEventListener('click', showAIOptions);
     }
-    
+
     // AI action button handlers
     if (analyzeBtn) {
-        analyzeBtn.addEventListener('click', function() {
+        analyzeBtn.addEventListener('click', function () {
             processAIRequest('analyze', 'Playlist Analysis');
         });
     }
-    
+
     if (recommendBtn) {
-        recommendBtn.addEventListener('click', function() {
+        recommendBtn.addEventListener('click', function () {
             processAIRequest('recommend', 'Similar Content Recommendations');
         });
     }
-    
+
     if (summarizeBtn) {
-        summarizeBtn.addEventListener('click', function() {
+        summarizeBtn.addEventListener('click', function () {
             processAIRequest('summarize', 'Playlist Summary');
         });
     }
-    
+
     if (chatBtn) {
-        chatBtn.addEventListener('click', function() {
+        chatBtn.addEventListener('click', function () {
             showChatInterface('Chat with AI about your Playlist');
         });
     }
-    
+
     if (submitPromptBtn) {
-        submitPromptBtn.addEventListener('click', function() {
+        submitPromptBtn.addEventListener('click', function () {
             const promptText = document.getElementById('ai-prompt').value.trim();
             if (!promptText) {
                 showAlert('Please enter a prompt.', 'error');
@@ -83,50 +83,50 @@ function initAIAssistant() {
             processAIRequest('custom', 'Custom AI Response', promptText);
         });
     }
-    
+
     // Function to show AI options view
     function showAIOptions() {
         if (aiOptions) aiOptions.style.display = 'block';
         if (aiResultContainer) aiResultContainer.style.display = 'none';
         if (aiResult) aiResult.innerHTML = '';
-        
+
         // Hide chat interface if it exists
         const chatInterface = document.querySelector('.ai-chat-interface');
         if (chatInterface) chatInterface.style.display = 'none';
     }
-    
+
     // Function to show AI results view
     function showAIResults(title) {
         if (aiOptions) aiOptions.style.display = 'none';
         if (aiResultContainer) aiResultContainer.style.display = 'block';
         if (aiResultTitle) aiResultTitle.textContent = title || 'AI Results';
-        
+
         // Hide chat interface if it exists
         const chatInterface = document.querySelector('.ai-chat-interface');
         if (chatInterface) chatInterface.style.display = 'none';
     }
-    
+
     // Function to show chat interface
     function showChatInterface(title) {
         console.log('Showing chat interface');
-        
+
         // Hide other views
         if (aiOptions) aiOptions.style.display = 'none';
         if (aiResultContainer) aiResultContainer.style.display = 'none';
-        
+
         // Get the chat interface
         const chatInterface = document.querySelector('.ai-chat-interface');
         if (!chatInterface) {
             console.error('Chat interface not found in DOM');
             return;
         }
-        
+
         // Update title if needed
         const chatTitle = document.getElementById('ai-chat-title');
         if (chatTitle && title) {
             chatTitle.textContent = title;
         }
-        
+
         // Clear previous messages except the system welcome message
         const chatMessages = document.getElementById('ai-chat-messages');
         if (chatMessages) {
@@ -135,62 +135,62 @@ function initAIAssistant() {
                 chatMessages.removeChild(chatMessages.lastChild);
             }
         }
-        
+
         // Make sure event listeners are attached
         const backBtn = document.getElementById('ai-chat-back-btn');
         const sendBtn = document.getElementById('ai-chat-send-btn');
         const chatInput = document.getElementById('ai-chat-input');
-        
+
         if (backBtn) {
             // Remove existing listener to prevent duplicates
             backBtn.removeEventListener('click', showAIOptions);
             // Add new listener
             backBtn.addEventListener('click', showAIOptions);
         }
-        
+
         if (sendBtn && chatInput) {
             // Remove existing listeners
-            const sendHandler = function() {
+            const sendHandler = function () {
                 sendChatMessage(chatInput.value);
             };
-            
-            const keyHandler = function(e) {
+
+            const keyHandler = function (e) {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     sendChatMessage(chatInput.value);
                 }
             };
-            
+
             // Remove old listeners if any
             sendBtn.removeEventListener('click', sendHandler);
             chatInput.removeEventListener('keydown', keyHandler);
-            
+
             // Add new listeners
             sendBtn.addEventListener('click', sendHandler);
             chatInput.addEventListener('keydown', keyHandler);
         }
-        
+
         // Show chat interface
         chatInterface.style.display = 'flex';
     }
-    
+
     // Function to send a chat message
     async function sendChatMessage(message) {
         if (!message.trim()) return;
-        
+
         const chatMessages = document.getElementById('ai-chat-messages');
         const chatInput = document.getElementById('ai-chat-input');
-        
+
         if (!chatMessages || !chatInput) {
             console.error('Chat elements not found');
             return;
         }
-        
+
         console.log('Sending chat message:', message);
-        
+
         // Clear input
         chatInput.value = '';
-        
+
         // Add user message to chat
         const userMessage = document.createElement('div');
         userMessage.className = 'ai-chat-message user';
@@ -200,7 +200,7 @@ function initAIAssistant() {
             </div>
         `;
         chatMessages.appendChild(userMessage);
-        
+
         // Add loading message
         const loadingMessage = document.createElement('div');
         loadingMessage.className = 'ai-chat-message ai loading';
@@ -212,23 +212,23 @@ function initAIAssistant() {
             </div>
         `;
         chatMessages.appendChild(loadingMessage);
-        
+
         // Scroll to bottom
         chatMessages.scrollTop = chatMessages.scrollHeight;
-        
+
         try {
             // Get the API key
             const apiKey = localStorage.getItem('youtubeApiKey');
             if (!apiKey) {
                 throw new Error('API key not found. Please set your API key in settings.');
             }
-            
+
             // Get the playlist data
             const playlistData = getPlaylistDataForAI();
             if (!playlistData) {
                 throw new Error('No playlist data available.');
             }
-            
+
             // Generate prompt for chat
             const prompt = `You are analyzing a YouTube playlist titled "${playlistData.title}" with ${playlistData.videos.length} videos.
 Here is the list of videos in the playlist:
@@ -241,13 +241,13 @@ Average video length: ${playlistData.stats.avgDuration}
 User question: ${message}
 
 Please respond to the user's question about this playlist in a helpful, accurate, and concise manner.`;
-            
+
             // Call Gemini API
             const response = await callGeminiAPI(prompt, apiKey);
-            
+
             // Remove loading message
             chatMessages.removeChild(loadingMessage);
-            
+
             // Add AI response to chat
             const aiMessage = document.createElement('div');
             aiMessage.className = 'ai-chat-message ai';
@@ -257,16 +257,16 @@ Please respond to the user's question about this playlist in a helpful, accurate
                 </div>
             `;
             chatMessages.appendChild(aiMessage);
-            
+
             // Scroll to bottom
             chatMessages.scrollTop = chatMessages.scrollHeight;
-            
+
         } catch (error) {
             console.error('Chat error:', error);
-            
+
             // Remove loading message
             chatMessages.removeChild(loadingMessage);
-            
+
             // Add error message
             const errorMessage = document.createElement('div');
             errorMessage.className = 'ai-chat-message system error';
@@ -276,38 +276,38 @@ Please respond to the user's question about this playlist in a helpful, accurate
                 </div>
             `;
             chatMessages.appendChild(errorMessage);
-            
+
             // Scroll to bottom
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
     }
-    
+
     // Process AI request based on type
     async function processAIRequest(type, title, customPrompt = '') {
         // Show loading and results view
         showAIResults(title);
         if (aiLoading) aiLoading.style.display = 'flex';
         if (aiResult) aiResult.innerHTML = '';
-        
+
         try {
             // Get the API key (same as YouTube API key)
             const apiKey = localStorage.getItem('youtubeApiKey');
             if (!apiKey) {
                 throw new Error('API key not found. Please set your API key in settings.');
             }
-            
+
             // Get the playlist data
             const playlistData = getPlaylistDataForAI();
             if (!playlistData) {
                 throw new Error('No playlist data available.');
             }
-            
+
             // Generate prompt based on request type
             const prompt = generatePrompt(type, playlistData, customPrompt);
-            
+
             // Call Gemini API
             const response = await callGeminiAPI(prompt, apiKey);
-            
+
             // Display the result
             if (aiResult) {
                 aiResult.innerHTML = formatAIResponse(response);
@@ -325,17 +325,17 @@ Please respond to the user's question about this playlist in a helpful, accurate
             if (aiLoading) aiLoading.style.display = 'none';
         }
     }
-    
+
     // Extract playlist data for AI processing
     function getPlaylistDataForAI() {
         // Use the global variables set during formatting
         if (!window.currentVideosData || !window.lastFormattedOutput) {
             return null;
         }
-        
+
         // Get playlist title
         const playlistTitle = document.getElementById('playlist-title')?.textContent || 'YouTube Playlist';
-        
+
         // Return structured data for AI
         return {
             title: playlistTitle,
@@ -344,7 +344,7 @@ Please respond to the user's question about this playlist in a helpful, accurate
             stats: window.originalStats
         };
     }
-    
+
     // Generate prompt based on request type
     function generatePrompt(type, playlistData, customPrompt) {
         const basePrompt = `You are analyzing a YouTube playlist titled "${playlistData.title}" with ${playlistData.videos.length} videos.
@@ -354,7 +354,7 @@ ${playlistData.formattedOutput}
 
 Total duration: ${playlistData.stats.totalDuration}
 Average video length: ${playlistData.stats.avgDuration}`;
-        
+
         switch (type) {
             case 'analyze':
                 return `${basePrompt}
@@ -367,7 +367,7 @@ Please analyze this playlist and provide insights about:
 5. The overall quality and comprehensiveness of the playlist for learning this subject
 
 Format your response with clear headings and bullet points where appropriate.`;
-                
+
             case 'recommend':
                 return `${basePrompt}
 
@@ -378,7 +378,7 @@ Based on this playlist, please recommend:
 4. What topics might be missing from this playlist that would be valuable to explore
 
 Format your recommendations in clear sections with brief explanations of why each recommendation is relevant.`;
-                
+
             case 'summarize':
                 return `${basePrompt}
 
@@ -390,25 +390,25 @@ Please create a comprehensive summary of this playlist that includes:
 5. A concise description of the progression of topics
 
 Format your summary with clear headings and keep it concise but informative.`;
-                
+
             case 'custom':
                 return `${basePrompt}
 
 User question: ${customPrompt}
 
 Please respond to the user's question about this playlist in a helpful, accurate, and concise manner.`;
-                
+
             default:
                 return basePrompt;
         }
     }
-    
+
     // Call Gemini API
     async function callGeminiAPI(prompt, apiKey) {
         try {
             // Gemini API endpoint
             const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
-            
+
             // Request data
             const requestData = {
                 contents: [
@@ -425,9 +425,9 @@ Please respond to the user's question about this playlist in a helpful, accurate
                     maxOutputTokens: 2048
                 }
             };
-            
+
             console.log('Calling Gemini API with prompt:', prompt.substring(0, 100) + '...');
-            
+
             // Make API request
             const response = await fetch(`${endpoint}?key=${apiKey}`, {
                 method: 'POST',
@@ -436,16 +436,16 @@ Please respond to the user's question about this playlist in a helpful, accurate
                 },
                 body: JSON.stringify(requestData)
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json();
                 console.error('Gemini API error:', errorData);
                 throw new Error(errorData.error?.message || 'Error calling Gemini API');
             }
-            
+
             const data = await response.json();
             console.log('Gemini API response:', data);
-            
+
             // Extract the text from the response
             if (data.candidates && data.candidates[0]?.content?.parts && data.candidates[0].content.parts.length > 0) {
                 return data.candidates[0].content.parts[0].text;
@@ -458,11 +458,11 @@ Please respond to the user's question about this playlist in a helpful, accurate
             throw error;
         }
     }
-    
+
     // Format AI response with markdown
     function formatAIResponse(text) {
         if (!text) return 'No response received from AI.';
-        
+
         // Simple markdown formatting
         return text
             .replace(/^# (.*$)/gm, '<h2>$1</h2>')
@@ -477,7 +477,7 @@ Please respond to the user's question about this playlist in a helpful, accurate
 }
 
 // Close modals when clicking outside
-window.addEventListener('click', function(event) {
+window.addEventListener('click', function (event) {
     const aiModal = document.getElementById('ai-modal');
     if (event.target === aiModal) {
         aiModal.style.display = 'none';
