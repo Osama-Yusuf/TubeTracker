@@ -149,9 +149,6 @@ function displayPlaylistSummary(videos, stats) {
     // Initialize AI button event listener
     initAIButton();
     
-    // Initialize download ZIP button
-    initDownloadZipButton();
-    
     // Initialize video download button
     initVideoDownloadButton();
 }
