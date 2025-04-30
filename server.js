@@ -12,11 +12,43 @@ const child_process = require('child_process');
 
 const PORT = 3000;
 
-// Check if yt-dlp is installed
+// Check if yt-dlp is installed and install it if not found
 exec('which yt-dlp', (error, stdout, stderr) => {
     if (error) {
-        console.error('yt-dlp is not installed. Please install it to enable video downloads.');
-        console.error('Installation instructions: https://github.com/ytdl-org/yt-dlp#installation');
+        console.log('yt-dlp is not installed. Attempting to install it automatically...');
+        
+        // Check if curl or wget is available
+        exec('which curl wget', (cmdError, cmdStdout) => {
+            const hasCurl = cmdStdout.includes('curl');
+            const hasWget = cmdStdout.includes('wget');
+            const ytdlpUrl = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp';
+            const installDir = '/usr/local/bin';
+            let installCmd;
+            
+            if (hasCurl) {
+                console.log('Using curl to download yt-dlp...');
+                installCmd = `curl -L ${ytdlpUrl} -o /tmp/yt-dlp && chmod +x /tmp/yt-dlp && sudo mv /tmp/yt-dlp ${installDir}/yt-dlp`;
+            } else if (hasWget) {
+                console.log('Using wget to download yt-dlp...');
+                installCmd = `wget ${ytdlpUrl} -O /tmp/yt-dlp && chmod +x /tmp/yt-dlp && sudo mv /tmp/yt-dlp ${installDir}/yt-dlp`;
+            } else {
+                console.error('Neither curl nor wget is available. Please install yt-dlp manually.');
+                console.error('Installation instructions: https://github.com/ytdl-org/yt-dlp#installation');
+                return;
+            }
+            
+            console.log('Executing:', installCmd);
+            exec(installCmd, (installError, installStdout, installStderr) => {
+                if (installError) {
+                    console.error('Failed to install yt-dlp automatically:', installError.message);
+                    console.error('You may need to install it manually: https://github.com/ytdl-org/yt-dlp#installation');
+                    if (installStderr) console.error(installStderr);
+                } else {
+                    console.log('yt-dlp installed successfully!');
+                    if (installStdout) console.log(installStdout);
+                }
+            });
+        });
     } else {
         console.log(`yt-dlp detected at: ${stdout.trim()}`);
     }
