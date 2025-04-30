@@ -1,4 +1,21 @@
 {
+  "name": "TubeTracker",
+  "version": "1.0.0",
+  "description": "YouTube playlist video downloader and formatter",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Osama-Yusuf/TubeTracker"
+  },
+  "author": {
+    "name": "Osama Yusuf",
+    "email": "osama9mohamed5@gmail.com",
+    "url": "https://www.osamalabs.com/"
+  },
+  "homepage": "https://github.com/Osama-Yusuf/TubeTracker",
   "dependencies": {
     "archiver": "^7.0.1",
     "jszip": "^3.10.1"
