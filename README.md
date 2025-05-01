@@ -1,4 +1,4 @@
-# TubeTracker
+# TubeTracker 
 
 A web application that extracts video information from a YouTube playlist and formats it in a clean, readable format. The app shows each video's title, duration, and link, along with the total playlist duration.
 
