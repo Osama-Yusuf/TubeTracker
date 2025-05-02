@@ -18,6 +18,7 @@
   "homepage": "https://github.com/Osama-Yusuf/TubeTracker",
   "dependencies": {
     "archiver": "^7.0.1",
-    "jszip": "^3.10.1"
+    "jszip": "^3.10.1",
+    "node-fetch": "^3.3.2"
   }
 }

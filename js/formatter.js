@@ -48,22 +48,28 @@ function durationToMinutes(isoDuration) {
 
 // Fetch video details for a playlist
 async function fetchPlaylistData(playlistId, apiKey) {
-    if (!playlistId || !apiKey) {
-        throw new Error('Playlist ID and API key are required');
+    if (!playlistId) {
+        throw new Error('Playlist ID is required');
     }
     
     try {
-        // First, get the playlist details
+        // First, get the playlist details using the server proxy
         const playlistResponse = await fetch(
-            `https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=${playlistId}&key=${apiKey}`
+            `/api/youtube-proxy?endpoint=playlists&playlistId=${playlistId}&apiKey=${apiKey || 'server'}`
         );
         
         if (!playlistResponse.ok) {
             const errorData = await playlistResponse.json();
-            throw new Error(errorData.error?.message || 'Failed to fetch playlist details');
+            throw new Error(errorData.error || 'Failed to fetch playlist details');
         }
         
         const playlistData = await playlistResponse.json();
+        
+        // Check if we're using the server's API key and notify the user
+        if (playlistData.usingServerKey) {
+            console.log('Using server API key');
+            // You could display a message to the user here if desired
+        }
         
         if (!playlistData.items || playlistData.items.length === 0) {
             throw new Error('Playlist not found or is empty');
@@ -71,19 +77,22 @@ async function fetchPlaylistData(playlistId, apiKey) {
         
         const playlistTitle = playlistData.items[0].snippet.title;
         
-        // Now get the playlist items (videos)
+        // Get all videos in the playlist (paginated)
         let videos = [];
         let nextPageToken = null;
         
         do {
-            const pageQuery = nextPageToken ? `&pageToken=${nextPageToken}` : '';
-            const playlistItemsResponse = await fetch(
-                `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}${pageQuery}&key=${apiKey}`
-            );
+            // Get playlist items using the server proxy
+            let playlistItemsUrl = `/api/youtube-proxy?endpoint=playlistItems&playlistId=${playlistId}&maxResults=50&apiKey=${apiKey || 'server'}`;
+            if (nextPageToken) {
+                playlistItemsUrl += `&pageToken=${nextPageToken}`;
+            }
+            
+            const playlistItemsResponse = await fetch(playlistItemsUrl);
             
             if (!playlistItemsResponse.ok) {
                 const errorData = await playlistItemsResponse.json();
-                throw new Error(errorData.error?.message || 'Failed to fetch playlist items');
+                throw new Error(errorData.error || 'Failed to fetch playlist items');
             }
             
             const playlistItemsData = await playlistItemsResponse.json();
@@ -94,14 +103,14 @@ async function fetchPlaylistData(playlistId, apiKey) {
                 .map(item => item.snippet.resourceId.videoId);
             
             if (videoIds.length > 0) {
-                // Get video details (including duration)
+                // Get video details (including duration) using the server proxy
                 const videoDetailsResponse = await fetch(
-                    `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet&id=${videoIds.join(',')}&key=${apiKey}`
+                    `/api/youtube-proxy?endpoint=videos&playlistId=${playlistId}&videoIds=${videoIds.join(',')}&apiKey=${apiKey || 'server'}`
                 );
                 
                 if (!videoDetailsResponse.ok) {
                     const errorData = await videoDetailsResponse.json();
-                    throw new Error(errorData.error?.message || 'Failed to fetch video details');
+                    throw new Error(errorData.error || 'Failed to fetch video details');
                 }
                 
                 const videoDetailsData = await videoDetailsResponse.json();

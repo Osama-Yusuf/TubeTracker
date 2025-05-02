@@ -12,6 +12,9 @@ const child_process = require('child_process');
 
 const PORT = 3000;
 
+// YouTube API key from environment variable
+const SERVER_API_KEY = process.env.YOUTUBE_API_KEY || '';
+
 // Check if yt-dlp is installed and install it if not found
 const localBinDir = path.join(__dirname, 'bin');
 const ytdlpPath = path.join(localBinDir, 'yt-dlp');
@@ -51,7 +54,7 @@ function checkYtDlp() {
 // Function to install yt-dlp locally without sudo
 async function installYtDlp() {
     console.log('yt-dlp not found. Attempting to install it locally...');
-    
+
     // Check if curl or wget is available
     return new Promise((resolve, reject) => {
         exec('which curl wget', (cmdError, cmdStdout) => {
@@ -59,7 +62,7 @@ async function installYtDlp() {
             const hasWget = cmdStdout.includes('wget');
             const ytdlpUrl = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp';
             let downloadCmd;
-            
+
             if (hasCurl) {
                 console.log('Using curl to download yt-dlp...');
                 downloadCmd = `curl -L ${ytdlpUrl} -o ${ytdlpPath}`;
@@ -72,7 +75,7 @@ async function installYtDlp() {
                 reject(new Error(errorMsg));
                 return;
             }
-            
+
             console.log('Executing:', downloadCmd);
             exec(downloadCmd, (installError, installStdout, installStderr) => {
                 if (installError) {
@@ -81,7 +84,7 @@ async function installYtDlp() {
                     reject(installError);
                     return;
                 }
-                
+
                 // Make the file executable
                 try {
                     fs.chmodSync(ytdlpPath, '755');
@@ -126,7 +129,7 @@ async function createZipFile(sourceDir, zipFilePath) {
     return new Promise((resolve, reject) => {
         // Use the system's zip command
         const zipCommand = `cd "${sourceDir}" && zip -r "${zipFilePath}" .`;
-        
+
         child_process.exec(zipCommand, (error, stdout, stderr) => {
             if (error) {
                 console.error(`Error creating ZIP file: ${error.message}`);
@@ -162,7 +165,7 @@ function downloadPlaylistVideos(playlistId, format, quality, includeNumber, res)
     // Create a unique folder for this download
     const downloadId = Date.now().toString();
     const downloadDir = path.join(tempDir, downloadId);
-    
+
     // We'll set the final ZIP filename after we get the playlist title
     let playlistTitle = '';
     let zipFileName = `playlist-${playlistId}-${format}.zip`;
@@ -219,12 +222,12 @@ function downloadPlaylistVideos(playlistId, format, quality, includeNumber, res)
     let videoCount = 0;
     let currentVideo = '';
     let lastProgressUpdate = Date.now();
-    
+
     // Send simplified progress updates to the client
     ytdl.stdout.on('data', (data) => {
         const dataStr = data.toString();
         outputBuffer += dataStr; // Store output to extract playlist title
-        
+
         // Try to extract playlist title if we don't have it yet
         if (!playlistTitle) {
             const extractedTitle = extractPlaylistTitle(outputBuffer);
@@ -235,7 +238,7 @@ function downloadPlaylistVideos(playlistId, format, quality, includeNumber, res)
                 res.write(`🎬 Downloading playlist: ${playlistTitle}\n`);
             }
         }
-        
+
         // Extract video title from download message
         const videoMatch = dataStr.match(/\[download\] Destination: (.+?)\n/);
         if (videoMatch && videoMatch[1]) {
@@ -244,7 +247,7 @@ function downloadPlaylistVideos(playlistId, format, quality, includeNumber, res)
             currentVideo = videoFileName;
             res.write(`⏬ Downloading video ${videoCount}: ${videoFileName}\n`);
         }
-        
+
         // Send periodic progress updates (but not too frequently)
         const now = Date.now();
         if (now - lastProgressUpdate > 3000 && dataStr.includes('ETA')) {
@@ -265,17 +268,17 @@ function downloadPlaylistVideos(playlistId, format, quality, includeNumber, res)
         if (code === 0 || videoCount > 0) { // Consider partial success if at least one video was downloaded
             res.write(`\n✅ Download completed! ${videoCount} videos processed.\n`);
             res.write(`🗜️ Creating ZIP file...\n`);
-            
+
             try {
                 // Update the ZIP file path with the potentially new filename
                 const finalZipPath = path.join(tempDir, zipFileName);
-                
+
                 // Create ZIP file
                 await createZipFile(downloadDir, finalZipPath);
-                
+
                 // Send success message with download URL
                 res.write(`\n🎉 All done! Your download is ready.\n`);
-                
+
                 // Send the special marker with download URL to the client
                 const downloadUrl = `/download/${downloadId}/${zipFileName}`;
                 res.write(`ZIP_FILE_READY:${downloadUrl}\n`);
@@ -307,8 +310,206 @@ const MIME_TYPES = {
 };
 
 // Create the server
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
     console.log(`Request for ${req.url}`);
+
+    // Handle Gemini API proxy requests
+    if (req.url.startsWith('/api/gemini-proxy')) {
+        try {
+            // Check if we have a server API key
+            if (!SERVER_API_KEY) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    error: 'No server API key configured for Gemini API'
+                }));
+                return;
+            }
+
+            // Get the request body
+            let body = '';
+            req.on('data', chunk => {
+                body += chunk.toString();
+            });
+
+            req.on('end', async () => {
+                try {
+                    // Parse the request body
+                    const requestData = JSON.parse(body);
+
+                    // Gemini API endpoint
+                    const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+
+                    // Make the request to Gemini API
+                    const fetch = await import('node-fetch');
+                    const response = await fetch.default(`${endpoint}?key=${SERVER_API_KEY}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(requestData)
+                    });
+
+                    // Get the response
+                    const data = await response.json();
+
+                    // Return the response
+                    res.writeHead(response.status, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify(data));
+                } catch (error) {
+                    console.error('Error processing Gemini API request:', error);
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        error: 'Error processing Gemini API request'
+                    }));
+                }
+            });
+            return;
+        } catch (error) {
+            console.error('Error handling Gemini API proxy request:', error);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                error: 'Internal server error'
+            }));
+            return;
+        }
+    }
+
+    // Handle API key status check
+    if (req.url.startsWith('/api/check-api-key-status')) {
+        try {
+            // Only check if we have a server API key
+            if (!SERVER_API_KEY) {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    status: 'unavailable',
+                    message: 'No server API key configured'
+                }));
+                return;
+            }
+
+            // Make a minimal API call to check quota status
+            const fetch = await import('node-fetch');
+            const testUrl = `https://www.googleapis.com/youtube/v3/videos?part=id&id=dQw4w9WgXcQ&key=${SERVER_API_KEY}`;
+            const response = await fetch.default(testUrl);
+            const data = await response.json();
+
+            if (data.error && data.error.code === 403) {
+                // API key quota exceeded
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    status: 'exceeded',
+                    message: 'Server API key quota exceeded. Please provide your own YouTube API key in settings.'
+                }));
+            } else {
+                // API key is working
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    status: 'available',
+                    message: 'Server API key is available'
+                }));
+            }
+            return;
+        } catch (error) {
+            console.error('Error checking API key status:', error);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                status: 'error',
+                message: 'Error checking API key status'
+            }));
+            return;
+        }
+    }
+
+    // Handle YouTube API proxy requests
+    if (req.url.startsWith('/api/youtube-proxy')) {
+        try {
+            // Parse the URL and query parameters
+            const urlObj = new URL(req.url, `http://${req.headers.host}`);
+            const endpoint = urlObj.searchParams.get('endpoint');
+            const playlistId = urlObj.searchParams.get('playlistId');
+            const videoIds = urlObj.searchParams.get('videoIds');
+            let clientApiKey = urlObj.searchParams.get('apiKey');
+
+            // Validate required parameters
+            if (!endpoint || !playlistId) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Missing required parameters' }));
+                return;
+            }
+
+            // Determine which API key to use
+            const useServerKey = !clientApiKey || clientApiKey === 'server';
+            const apiKey = useServerKey ? SERVER_API_KEY : clientApiKey;
+
+            // Check if we have a valid API key
+            if (!apiKey) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    error: 'No API key available. Please provide your own YouTube API key in settings.'
+                }));
+                return;
+            }
+
+            // Construct the YouTube API URL based on the endpoint
+            let youtubeApiUrl;
+            if (endpoint === 'playlists') {
+                youtubeApiUrl = `https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=${playlistId}&key=${apiKey}`;
+            } else if (endpoint === 'playlistItems') {
+                const pageToken = urlObj.searchParams.get('pageToken') || '';
+                const maxResults = urlObj.searchParams.get('maxResults') || '50';
+                youtubeApiUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&maxResults=${maxResults}&key=${apiKey}`;
+                if (pageToken) {
+                    youtubeApiUrl += `&pageToken=${pageToken}`;
+                }
+            } else if (endpoint === 'videos' && videoIds) {
+                youtubeApiUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet&id=${videoIds}&key=${apiKey}`;
+            } else {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Invalid endpoint or missing parameters' }));
+                return;
+            }
+
+            // Make the request to YouTube API
+            const fetch = await import('node-fetch');
+            const apiResponse = await fetch.default(youtubeApiUrl);
+            const data = await apiResponse.json();
+
+            // Check for YouTube API quota errors
+            if (data.error && data.error.code === 403) {
+                // If server key is exhausted and client provided their own key, suggest using their key
+                if (useServerKey) {
+                    res.writeHead(403, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        error: 'Server API key quota exceeded. Please provide your own YouTube API key in settings.',
+                        quotaExceeded: true
+                    }));
+                } else {
+                    // Client key is exhausted
+                    res.writeHead(403, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        error: 'Your API key quota has been exceeded. Please try again later or use a different API key.',
+                        quotaExceeded: true
+                    }));
+                }
+                return;
+            }
+
+            // Add a flag to indicate if server key was used
+            if (useServerKey) {
+                data.usingServerKey = true;
+            }
+
+            // Return the YouTube API response
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(data));
+            return;
+        } catch (error) {
+            console.error('Error processing YouTube API proxy request:', error);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Internal server error' }));
+            return;
+        }
+    }
 
     // Check if it's a video download request
     if (req.url.startsWith('/api/download-videos')) {
@@ -336,48 +537,48 @@ const server = http.createServer((req, res) => {
             return;
         }
     }
-    
+
     // Handle ZIP file download requests
     if (req.url.startsWith('/download/')) {
         try {
             // Extract the file path from the URL
             const urlPath = req.url.substring('/download/'.length);
             const [downloadId, fileName] = urlPath.split('/');
-            
+
             if (!downloadId || !fileName) {
                 res.writeHead(400, { 'Content-Type': 'text/plain' });
                 res.end('Invalid download URL');
                 return;
             }
-            
+
             // Construct the full path to the ZIP file
             const zipFilePath = path.join(tempDir, fileName);
-            
+
             // Check if the file exists
             if (!fs.existsSync(zipFilePath)) {
                 res.writeHead(404, { 'Content-Type': 'text/plain' });
                 res.end('File not found');
                 return;
             }
-            
+
             // Get file stats
             const stat = fs.statSync(zipFilePath);
-            
+
             // Set appropriate headers for file download
             res.writeHead(200, {
                 'Content-Type': 'application/zip',
                 'Content-Length': stat.size,
                 'Content-Disposition': `attachment; filename="${fileName}"`
             });
-            
+
             // Stream the file to the client
             const fileStream = fs.createReadStream(zipFilePath);
             fileStream.pipe(res);
-            
+
             // Clean up the file after it's been sent
             fileStream.on('end', () => {
                 console.log(`File ${zipFilePath} sent to client`);
-                
+
                 // Optional: Clean up the temp directory after some time
                 setTimeout(() => {
                     try {
@@ -396,7 +597,7 @@ const server = http.createServer((req, res) => {
                     }
                 }, 5 * 60 * 1000); // Clean up after 5 minutes
             });
-            
+
             return;
         } catch (error) {
             console.error('Error serving download:', error);

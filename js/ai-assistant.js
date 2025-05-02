@@ -217,11 +217,9 @@ function initAIAssistant() {
         chatMessages.scrollTop = chatMessages.scrollHeight;
 
         try {
-            // Get the API key
+            // Get the API key (optional - will use server key if not provided)
             const apiKey = localStorage.getItem('youtubeApiKey');
-            if (!apiKey) {
-                throw new Error('API key not found. Please set your API key in settings.');
-            }
+            // API key is now optional - server will use its own key if none is provided
 
             // Get the playlist data
             const playlistData = getPlaylistDataForAI();
@@ -406,9 +404,6 @@ Please respond to the user's question about this playlist in a helpful, accurate
     // Call Gemini API
     async function callGeminiAPI(prompt, apiKey) {
         try {
-            // Gemini API endpoint
-            const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
-
             // Request data
             const requestData = {
                 contents: [
@@ -426,10 +421,10 @@ Please respond to the user's question about this playlist in a helpful, accurate
                 }
             };
 
-            console.log('Calling Gemini API with prompt:', prompt.substring(0, 100) + '...');
+            console.log('Calling Gemini API via server proxy with prompt:', prompt.substring(0, 100) + '...');
 
-            // Make API request
-            const response = await fetch(`${endpoint}?key=${apiKey}`, {
+            // Make API request through server proxy
+            const response = await fetch('/api/gemini-proxy', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
